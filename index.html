@@ -406,6 +406,44 @@
   .scramble-feedback .expect { color: var(--muted); margin-top: 4px; }
   .scramble-feedback .expect b { color: #fff; }
 
+  /* Story Studio */
+  .writer textarea {
+    width: 100%; min-height: 220px; padding: 14px 16px; font-size: 16px;
+    color: var(--text); background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border); border-radius: 12px; outline: none;
+    font-family: inherit; line-height: 1.55; resize: vertical;
+  }
+  .writer textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(33,230,193,0.18); }
+  .prompt-card {
+    padding: 14px; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 12px;
+  }
+  .prompt-card .scen { font-size: 16px; line-height: 1.5; margin: 6px 0 10px; }
+  .kw-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+  .kw {
+    background: rgba(33,230,193,0.12); color: var(--accent);
+    border: 1px solid rgba(33,230,193,0.35); border-radius: 999px;
+    padding: 4px 10px; font-size: 13px; font-weight: 700;
+  }
+  .kw.used { background: rgba(74,222,128,0.18); color: var(--good); border-color: rgba(74,222,128,0.45); }
+  .target {
+    color: var(--muted); font-size: 13px; margin-top: 8px;
+  }
+  .counters { color: var(--muted); font-size: 13px; margin-top: 6px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .counters b { color: var(--text); }
+  .counters .ok { color: var(--good); }
+  .counters .lo { color: var(--warn); }
+  .rubric { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .crit {
+    display: flex; gap: 10px; padding: 10px 12px; border-radius: 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  }
+  .crit.pass { background: linear-gradient(160deg, rgba(74,222,128,0.10), transparent 70%); border-color: rgba(74,222,128,0.45); }
+  .crit.fail { background: linear-gradient(160deg, rgba(255,90,122,0.10), transparent 70%); border-color: rgba(255,90,122,0.45); }
+  .crit .ic { font-size: 18px; width: 22px; flex: 0 0 22px; }
+  .crit .lbl { font-weight: 700; }
+  .crit .det { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
   /* small screens */
   @media (max-width: 520px) {
     .topbar { padding: 8px 10px; }
@@ -432,7 +470,7 @@
    Single-file translation practice for EALD students (~Yr 7).
    Mandarin -> English, 10 units, 3 levels, 9 sentences per run.
    ============================================================ */
-const APP_VERSION = 'v1.3 (+ Sentence Scramble module)';
+const APP_VERSION = 'v1.4 (+ Story Studio free-write module)';
 
 /* ------------------------- CONTENT ------------------------- */
 const UNITS = [
@@ -1007,6 +1045,67 @@ const UNITS = [
   }
 ];
 
+/* --------------------- STORY PROMPTS --------------------- */
+// One prompt per (unit, text-type). Target sentence/word counts scale by level.
+const STORY_PROMPTS = {
+  insects: {
+    narrative:   { scenario: 'Write a short story about the day you found an unusual insect in your backyard.', keywords: ['discovered','carefully','watched','surprised','finally'] },
+    persuasive:  { scenario: 'Convince a friend that we should protect insects, especially bees.',              keywords: ['should','important','help','because','protect'] },
+    informative: { scenario: 'Write a short fact-file about bees and what they do.',                            keywords: ['live','make','flowers','important','work'] }
+  },
+  sports: {
+    narrative:   { scenario: 'Tell the story of the most exciting game you have ever played in or watched.',    keywords: ['scored','team','last','ran','won'] },
+    persuasive:  { scenario: 'Persuade your school to add a new sport to the PE program.',                       keywords: ['should','fun','exercise','learn','because'] },
+    informative: { scenario: 'Explain how a game of soccer is played, including the basic rules.',               keywords: ['players','ball','goal','team','score'] }
+  },
+  dinosaurs: {
+    narrative:   { scenario: 'Imagine a scientist found a living dinosaur. Write what happened that day.',        keywords: ['discovered','ran','hid','called','finally'] },
+    persuasive:  { scenario: 'Argue that students should learn more about dinosaurs and fossils at school.',     keywords: ['should','important','history','exciting','because'] },
+    informative: { scenario: 'Describe what we know about the T-Rex: size, food, where it lived, and why it died out.', keywords: ['large','teeth','hunted','lived','extinct'] }
+  },
+  space: {
+    narrative:   { scenario: 'Write a short story about your first trip to Mars as a young astronaut.',           keywords: ['launched','landed','looked','felt','returned'] },
+    persuasive:  { scenario: 'Should governments spend money on space travel? Argue your view clearly.',           keywords: ['should','important','future','discover','because'] },
+    informative: { scenario: 'Explain what astronauts do every day on the International Space Station.',           keywords: ['live','work','experiments','float','sleep'] }
+  },
+  vehicles: {
+    narrative:   { scenario: 'Tell the story of a road trip that did not go to plan.',                              keywords: ['drove','stopped','suddenly','fixed','finally'] },
+    persuasive:  { scenario: 'Persuade people in your city to ride bikes more often instead of driving.',          keywords: ['should','healthy','environment','fun','because'] },
+    informative: { scenario: 'Describe how an electric car works and why it is different from a petrol car.',      keywords: ['battery','motor','charge','clean','drive'] }
+  },
+  animals: {
+    narrative:   { scenario: 'Write a story about a wild animal you saw on a trip into nature.',                    keywords: ['spotted','moved','watched','quietly','amazed'] },
+    persuasive:  { scenario: 'Convince readers that we must work harder to save endangered animals.',                keywords: ['must','protect','future','important','because'] },
+    informative: { scenario: 'Write a fact-file about koalas: where they live, what they eat, and why they are special.', keywords: ['live','eat','sleep','native','trees'] }
+  },
+  food: {
+    narrative:   { scenario: 'Describe the time you tried a brand-new food for the first time.',                    keywords: ['opened','tasted','smelled','surprised','finished'] },
+    persuasive:  { scenario: 'Argue that schools should serve healthier lunches in the canteen.',                    keywords: ['should','healthy','energy','important','because'] },
+    informative: { scenario: 'Explain step-by-step how to make a simple sandwich.',                                  keywords: ['bread','butter','slice','add','eat'] }
+  },
+  games: {
+    narrative:   { scenario: 'Tell the story of an epic gaming session with your friends online.',                   keywords: ['joined','played','defeated','laughed','finished'] },
+    persuasive:  { scenario: 'Persuade your parents that gaming has some good effects on young people.',             keywords: ['should','learn','skills','friends','because'] },
+    informative: { scenario: 'Describe how esports tournaments work and why people watch them.',                     keywords: ['players','teams','compete','online','win'] }
+  },
+  adventure: {
+    narrative:   { scenario: 'Write a story about a camping trip where something unexpected happened.',              keywords: ['hiked','set up','heard','ran','returned'] },
+    persuasive:  { scenario: 'Convince kids that outdoor adventures are better than spending the weekend on a screen.', keywords: ['should','fun','healthy','friends','because'] },
+    informative: { scenario: 'List and explain the gear you need to bring for a safe day hike.',                      keywords: ['bring','water','map','sunscreen','snacks'] }
+  },
+  heroes: {
+    narrative:   { scenario: 'Imagine you became a superhero for a day. What did you do and how did it end?',         keywords: ['woke','discovered','flew','saved','returned'] },
+    persuasive:  { scenario: 'Argue that everyday people, like nurses and firefighters, are real heroes.',            keywords: ['should','brave','help','important','because'] },
+    informative: { scenario: 'Describe the parts of a good superhero story and why people love them.',                 keywords: ['hero','villain','power','save','story'] }
+  }
+};
+
+function storyTargetsFor(level) {
+  if (level === 1) return { sentences: 3, words: 25 };
+  if (level === 2) return { sentences: 4, words: 45 };
+  return { sentences: 5, words: 70 };
+}
+
 /* --------------------- STATE / STORAGE --------------------- */
 const STORE_KEY = 'ealdcoach.v1';
 
@@ -1133,12 +1232,27 @@ const BADGES = {
   scrBronze:{ name: 'Scramble Apprentice', icon: '🧩', desc: 'Scramble: complete every unit on Level 1.' },
   scrSilver:{ name: 'Scramble Pro',     icon: '🟪', desc: 'Scramble: complete every unit on Level 2.' },
   scrGold:  { name: 'Scramble Master',  icon: '🟧', desc: 'Scramble: complete every unit on Level 3.' },
-  wizard:   { name: 'Word Wizard',      icon: '🪄', desc: 'Finish a Scramble round with zero wrong checks.' }
+  wizard:   { name: 'Word Wizard',      icon: '🪄', desc: 'Finish a Scramble round with zero wrong checks.' },
+  stBronze: { name: 'Story Apprentice', icon: '✍️', desc: 'Story Studio: complete every unit on Level 1.' },
+  stSilver: { name: 'Story Pro',        icon: '📜', desc: 'Story Studio: complete every unit on Level 2.' },
+  stGold:   { name: 'Story Master',     icon: '✒️', desc: 'Story Studio: complete every unit on Level 3.' },
+  wordsmith:{ name: 'Wordsmith',        icon: '✨', desc: 'Pass every prompt on the first check in a Story round.' }
 };
 
-function modeKey(mode = state.mode) { return mode === 'scramble' ? '_SCR' : ''; }
+function modeKey(mode = state.mode) {
+  if (mode === 'scramble') return '_SCR';
+  if (mode === 'story') return '_STORY';
+  return '';
+}
 function unitDoneKey(unitId, lvl, mode = state.mode) { return `${unitId}_L${lvl}${modeKey(mode)}`; }
 function isUnitDone(unitId, lvl, mode = state.mode) { return !!state.completed[unitDoneKey(unitId, lvl, mode)]; }
+function countDoneInMode(mode = state.mode) {
+  const suffix = modeKey(mode);
+  return Object.keys(state.completed).filter(k => {
+    if (suffix === '') return !k.endsWith('_SCR') && !k.endsWith('_STORY');
+    return k.endsWith(suffix);
+  }).length;
+}
 
 function awardBadge(id) {
   if (!state.badges.includes(id)) {
@@ -1168,6 +1282,15 @@ function checkLevelBadges() {
       if (lvl === 1) awardBadge('scrBronze');
       if (lvl === 2) awardBadge('scrSilver');
       if (lvl === 3) awardBadge('scrGold');
+    }
+  }
+  // Story mode badges
+  for (const lvl of [1, 2, 3]) {
+    const all = UNITS.every(u => state.completed[`${u.id}_L${lvl}_STORY`]);
+    if (all) {
+      if (lvl === 1) awardBadge('stBronze');
+      if (lvl === 2) awardBadge('stSilver');
+      if (lvl === 3) awardBadge('stGold');
     }
   }
   if (state.streak >= 5) awardBadge('streak5');
@@ -1282,14 +1405,20 @@ function renderHome(app) {
     el('button', {
       class: 'mode-tab' + (state.mode === 'scramble' ? ' active' : ''),
       onclick: () => { state.mode = 'scramble'; saveState(); render(); }
-    }, '🧩 Scramble')
+    }, '🧩 Scramble'),
+    el('button', {
+      class: 'mode-tab' + (state.mode === 'story' ? ' active' : ''),
+      onclick: () => { state.mode = 'story'; saveState(); render(); }
+    }, '✍️ Story Studio')
   );
   heroLeft.appendChild(modeTabs);
 
   heroLeft.appendChild(el('h1', {}, `Hey ${state.name}! Ready to coach your English?`));
   const blurb = state.mode === 'translate'
     ? 'Pick a level, then choose a topic. You will translate 9 Mandarin sentences (3 narrative, 3 persuasive, 3 informative). Get most of them close enough and you pass!'
-    : 'Word-order workout! Tap the English word tiles to rebuild each sentence in the right order. 9 sentences per round — perfect for nailing the tricky bits like articles, plurals, and tense.';
+    : state.mode === 'scramble'
+    ? 'Word-order workout! Tap the English word tiles to rebuild each sentence in the right order. 9 sentences per round — perfect for nailing the tricky bits like articles, plurals, and tense.'
+    : 'Free-write time! You get 3 writing prompts per topic (narrative, persuasive, informative). Write your own paragraph and the rubric will check sentence count, keywords, capitals, punctuation, and text-type features.';
   heroLeft.appendChild(el('p', {}, blurb));
 
   const lvlRow = el('div', { class: 'level-row' });
@@ -1315,11 +1444,13 @@ function renderHome(app) {
   heroRight.appendChild(el('div', { class: 'section-title' }, 'Your Progress'));
   const stats = el('div', { class: 'stat-row' });
   const totalUnits = UNITS.length * 3;
-  const modeSuffix = state.mode === 'scramble' ? '_SCR' : '';
-  const doneCount = Object.keys(state.completed).filter(k => state.mode === 'scramble' ? k.endsWith('_SCR') : !k.endsWith('_SCR')).length;
+  const doneCount = countDoneInMode();
+  const doneLabel = state.mode === 'scramble' ? 'Scramble done'
+                  : state.mode === 'story'    ? 'Stories done'
+                  :                              'Translate done';
   stats.appendChild(stat('XP', state.points));
   stats.appendChild(stat('Badges', state.badges.length));
-  stats.appendChild(stat(state.mode === 'scramble' ? 'Scramble done' : 'Translate done', `${doneCount} / ${totalUnits}`));
+  stats.appendChild(stat(doneLabel, `${doneCount} / ${totalUnits}`));
   stats.appendChild(stat('Streak', state.streak + ' 🔥'));
   heroRight.appendChild(stats);
 
@@ -1340,7 +1471,9 @@ function renderHome(app) {
   app.appendChild(hero);
 
   // Units
-  const modeLabel = state.mode === 'scramble' ? '🧩 Scramble' : '📝 Translate';
+  const modeLabel = state.mode === 'scramble' ? '🧩 Scramble'
+                  : state.mode === 'story'    ? '✍️ Story Studio'
+                  :                              '📝 Translate';
   app.appendChild(el('div', { class: 'section-title' }, `${modeLabel} — Topics — Level ${state.selectedLevel}`));
   const grid = el('section', { class: 'units' });
   for (const u of UNITS) {
@@ -1351,7 +1484,11 @@ function renderHome(app) {
 
     const card = el('button', {
       class: 'unit' + (doneThisLevel ? ' done' : ''),
-      onclick: () => state.mode === 'scramble' ? startScramble(u.id) : startQuiz(u.id)
+      onclick: () => {
+        if (state.mode === 'scramble') return startScramble(u.id);
+        if (state.mode === 'story')    return startStory(u.id);
+        return startQuiz(u.id);
+      }
     },
       el('div', { class: 'corner' }, doneThisLevel ? 'PASSED' : ''),
       el('div', { class: 'emoji' }, u.emoji),
@@ -1922,6 +2059,347 @@ function finishScrambleUnit() {
     btns.appendChild(el('button', { class: 'btn primary lg', onclick: () => { closeModal(); scramble = null; render(); } }, 'Back to Topics'));
   }
   btns.appendChild(el('button', { class: 'btn ghost', onclick: () => { closeModal(); scramble = null; render(); } }, 'Home'));
+  m.appendChild(btns);
+  openModal(m);
+}
+
+/* --------------------- STORY STUDIO MODE --------------------- */
+let story = null;
+
+const PAST_IRREGULARS = ['saw','went','ran','was','were','did','had','ate','made','gave','took','came','found','said','told','got','threw','heard','flew','drove','swam','rode','built','sang','grew','knew','wrote','spoke','bought','brought','caught','taught','thought','left','met','sat','stood','won','lost','hit','slept','woke','felt','began','spent','kept','held','rose','fell','broke','chose','drew','blew','shook','set','put','read','let','cut','shot','rang'];
+const PERSUASIVE_MARKERS = ['i think','i believe','i feel','in my opinion','should','must','need to','have to','important','because','everyone','every person','all of us','agree','disagree','clearly','obviously','definitely'];
+const INFO_VERBS = [/\bis\b/, /\bare\b/, /\bwas\b/, /\bwere\b/, /\bhas\b/, /\bhave\b/, /\bcan\b/, /\blives?\b/, /\beats?\b/, /\bmakes?\b/, /\bcontains?\b/, /\bincludes?\b/, /\buses?\b/, /\bweighs?\b/, /\bmeasures?\b/, /\bgrows?\b/];
+
+function splitSentences(text) {
+  return (text || '').split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+}
+function wordCount(text) {
+  return ((text || '').match(/\b[\w']+\b/g) || []).length;
+}
+function gradeWriting(text, prompt, level, type) {
+  const t = (text || '').trim();
+  const lower = t.toLowerCase();
+  const sentences = splitSentences(t);
+  const words = wordCount(t);
+  const target = storyTargetsFor(level);
+
+  const criteria = [];
+
+  criteria.push({
+    label: `Wrote at least ${target.sentences} sentences`,
+    pass: sentences.length >= target.sentences,
+    detail: `You wrote ${sentences.length} sentence${sentences.length === 1 ? '' : 's'}.`
+  });
+
+  criteria.push({
+    label: `At least ${target.words} words`,
+    pass: words >= target.words,
+    detail: words >= target.words ? `${words} words — nice length.` : `You wrote ${words} words — keep going!`
+  });
+
+  const capOk = sentences.length > 0 && sentences.every(s => /^[A-Z"\u201C]/.test(s));
+  criteria.push({
+    label: 'Every sentence starts with a capital letter',
+    pass: capOk,
+    detail: capOk ? 'Capitalisation looks good.' : 'Check the first letter of each new sentence.'
+  });
+
+  const endsOk = sentences.length > 0 && /[.!?]\s*$/.test(t) && (t.match(/[.!?]/g) || []).length >= sentences.length;
+  criteria.push({
+    label: 'Every sentence ends with . ! or ?',
+    pass: endsOk,
+    detail: endsOk ? 'Punctuation looks good.' : 'Add a full stop (or ! / ?) to the end of each sentence.'
+  });
+
+  const usedKw = prompt.keywords.filter(kw => {
+    const safe = kw.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`\\b${safe}\\b`, 'i').test(lower);
+  });
+  const minKw = Math.min(2, prompt.keywords.length);
+  criteria.push({
+    label: `Used at least ${minKw} keyword${minKw === 1 ? '' : 's'} from the prompt`,
+    pass: usedKw.length >= minKw,
+    detail: usedKw.length > 0
+      ? `You used: ${usedKw.join(', ')}.`
+      : `Try to include at least ${minKw} of: ${prompt.keywords.join(', ')}.`
+  });
+
+  if (type === 'narrative') {
+    const ed = (lower.match(/\b\w+ed\b/g) || []).length;
+    const irr = PAST_IRREGULARS.filter(w => new RegExp(`\\b${w}\\b`, 'i').test(lower)).length;
+    const total = ed + irr;
+    criteria.push({
+      label: 'Used past-tense verbs (narrative style)',
+      pass: total >= 2,
+      detail: total > 0 ? `Found ${total} past-tense verb${total === 1 ? '' : 's'}.` : 'Use verbs like "walked", "saw", "ran", "found" to tell what happened.'
+    });
+  } else if (type === 'persuasive') {
+    const hits = PERSUASIVE_MARKERS.filter(m => lower.includes(m)).length;
+    criteria.push({
+      label: 'Used opinion / persuasion words',
+      pass: hits >= 2,
+      detail: hits > 0 ? `Found ${hits} opinion phrase${hits === 1 ? '' : 's'}.` : 'Use words like "should", "must", "important", "because", "I think".'
+    });
+  } else {
+    const hits = INFO_VERBS.filter(r => r.test(lower)).length;
+    criteria.push({
+      label: 'Used factual / present-tense verbs',
+      pass: hits >= 2,
+      detail: hits > 0 ? `Found ${hits} factual verb pattern${hits === 1 ? '' : 's'}.` : 'Use verbs like "is", "are", "has", "have", "lives", "eats", "makes".'
+    });
+  }
+
+  const passed = criteria.filter(c => c.pass).length;
+  const total = criteria.length;
+  const pass = passed >= total - 1; // need 5/6
+  return { criteria, passed, total, pass, usedKeywords: usedKw, sentences: sentences.length, words };
+}
+
+function startStory(unitId) {
+  const u = UNITS.find(x => x.id === unitId);
+  const lvl = state.selectedLevel;
+  const prompts = STORY_PROMPTS[u.id];
+  const items = ['narrative', 'persuasive', 'informative'].map(type => ({
+    type, prompt: prompts[type], text: '', checked: false, result: null, passed: false, attempts: 0
+  }));
+  story = { unit: u, level: lvl, items, index: 0, firstTryAllPass: true };
+  renderStory();
+}
+
+function renderStory() {
+  const app = $('#app');
+  app.innerHTML = '';
+  app.appendChild(topbar());
+
+  const it = story.items[story.index];
+  const target = storyTargetsFor(story.level);
+
+  const head = el('div', { class: 'panel' });
+  head.appendChild(el('div', { class: 'quiz-header' },
+    el('button', {
+      class: 'btn ghost',
+      onclick: () => {
+        if (confirm('Leave Story Studio? Your draft on this prompt will be lost.')) { story = null; render(); }
+      }
+    }, '← Topics'),
+    el('div', { class: 'crumb' }, `Level ${story.level} • ${story.unit.name} • ✍️ Story Studio`)
+  ));
+  head.appendChild(el('div', { class: 'quiz-title' },
+    el('div', { class: 'e' }, story.unit.emoji),
+    el('h2', {}, `${story.unit.name} — Free Write`)
+  ));
+
+  // dots progress
+  const dots = el('div', { class: 'dots', style: { marginTop: '10px' } });
+  story.items.forEach((s, i) => {
+    const cls = 'd' + (i === story.index ? ' current' : (s.passed ? ' done' : (s.attempts > 0 ? ' wrong' : '')));
+    dots.appendChild(el('span', { class: cls }));
+  });
+  head.appendChild(dots);
+  app.appendChild(head);
+
+  // Prompt card
+  const stage = el('div', { class: 'panel writer' });
+  const tagCls = it.type === 'narrative' ? 'narr' : it.type === 'persuasive' ? 'pers' : 'info';
+  const tagText = it.type === 'narrative' ? 'Narrative 📖' : it.type === 'persuasive' ? 'Persuasive 💬' : 'Informative 📊';
+
+  const pcard = el('div', { class: 'prompt-card' });
+  pcard.appendChild(el('div', { class: 'qhead' },
+    el('span', { class: 'qnum' }, `Prompt ${story.index + 1} of ${story.items.length}`),
+    el('span', { class: 'tag ' + tagCls }, tagText)
+  ));
+  pcard.appendChild(el('div', { class: 'scen' }, it.prompt.scenario));
+  const kwChips = el('div', { class: 'kw-chips' });
+  const usedLower = (it.text || '').toLowerCase();
+  it.prompt.keywords.forEach(kw => {
+    const safe = kw.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const used = new RegExp(`\\b${safe}\\b`, 'i').test(usedLower);
+    kwChips.appendChild(el('span', { class: 'kw' + (used ? ' used' : '') }, (used ? '✓ ' : '') + kw));
+  });
+  pcard.appendChild(kwChips);
+  pcard.appendChild(el('div', { class: 'target' },
+    `Aim for at least ${target.sentences} sentences (~${target.words} words). Pass ${5} of 6 rubric checks to clear this prompt.`));
+  stage.appendChild(pcard);
+
+  // Textarea
+  const ta = el('textarea', {
+    placeholder: 'Start writing your ' + tagText.split(' ')[0].toLowerCase() + ' here…',
+    spellcheck: 'true', autocomplete: 'off', autocorrect: 'on'
+  });
+  ta.value = it.text || '';
+  ta.addEventListener('input', () => {
+    it.text = ta.value;
+    updateCounters();
+    updateKwChips();
+  });
+  stage.appendChild(ta);
+
+  // Counters
+  const counters = el('div', { class: 'counters', id: 'storyCounters' });
+  stage.appendChild(counters);
+
+  // Rubric area
+  const rubric = el('div', { class: 'rubric', id: 'storyRubric' });
+  if (it.checked && it.result) {
+    populateRubric(rubric, it.result);
+  }
+  stage.appendChild(rubric);
+
+  app.appendChild(stage);
+
+  // Actions
+  const actions = el('div', { class: 'scramble-actions' });
+  const info = el('div', { class: 'info', style: { color: 'var(--muted)', fontSize: '13px' } },
+    it.passed
+      ? '✓ Prompt passed — tap Next Prompt.'
+      : it.checked
+      ? `Passed ${it.result.passed}/${it.result.total} rubric checks. Edit and re-check.`
+      : 'Write your paragraph, then tap Check My Writing.');
+  actions.appendChild(info);
+
+  const btns = el('div', { class: 'row-wrap' });
+  if (it.passed) {
+    const allDone = story.items.every(x => x.passed);
+    if (allDone) {
+      btns.appendChild(el('button', { class: 'btn primary lg', onclick: finishStoryUnit }, 'Finish Round 🎉'));
+    } else {
+      btns.appendChild(el('button', { class: 'btn primary lg', onclick: nextStoryPrompt }, 'Next Prompt →'));
+    }
+  } else {
+    btns.appendChild(el('button', {
+      class: 'btn',
+      onclick: () => {
+        const next = story.items.findIndex((s, i) => i > story.index && !s.passed);
+        if (next >= 0) { story.index = next; renderStory(); return; }
+        const any = story.items.findIndex(s => !s.passed);
+        if (any >= 0 && any !== story.index) { story.index = any; renderStory(); }
+        else { toast('No other prompts to switch to', 'ℹ️'); }
+      }
+    }, 'Switch Prompt ↷'));
+    btns.appendChild(el('button', { class: 'btn primary lg', onclick: checkStory }, 'Check My Writing ✓'));
+  }
+  actions.appendChild(btns);
+  app.appendChild(actions);
+
+  updateCounters();
+}
+
+function updateCounters() {
+  const it = story.items[story.index];
+  const target = storyTargetsFor(story.level);
+  const sCount = splitSentences(it.text).length;
+  const wCount = wordCount(it.text);
+  const node = document.getElementById('storyCounters');
+  if (!node) return;
+  node.innerHTML = '';
+  const sCls = sCount >= target.sentences ? 'ok' : 'lo';
+  const wCls = wCount >= target.words ? 'ok' : 'lo';
+  node.appendChild(el('span', {}, 'Sentences: ', el('b', { class: sCls }, `${sCount} / ${target.sentences}`)));
+  node.appendChild(el('span', {}, 'Words: ', el('b', { class: wCls }, `${wCount} / ${target.words}`)));
+}
+
+function updateKwChips() {
+  const it = story.items[story.index];
+  const chipsParent = document.querySelector('.kw-chips');
+  if (!chipsParent) return;
+  chipsParent.innerHTML = '';
+  const lower = (it.text || '').toLowerCase();
+  it.prompt.keywords.forEach(kw => {
+    const safe = kw.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const used = new RegExp(`\\b${safe}\\b`, 'i').test(lower);
+    chipsParent.appendChild(el('span', { class: 'kw' + (used ? ' used' : '') }, (used ? '✓ ' : '') + kw));
+  });
+}
+
+function populateRubric(node, result) {
+  node.innerHTML = '';
+  result.criteria.forEach(c => {
+    const row = el('div', { class: 'crit ' + (c.pass ? 'pass' : 'fail') },
+      el('div', { class: 'ic' }, c.pass ? '✅' : '⬜'),
+      el('div', {},
+        el('div', { class: 'lbl' }, c.label),
+        el('div', { class: 'det' }, c.detail)
+      )
+    );
+    node.appendChild(row);
+  });
+}
+
+function checkStory() {
+  const it = story.items[story.index];
+  if (!(it.text || '').trim()) { toast('Write something first ✏️'); return; }
+  it.attempts++;
+  const result = gradeWriting(it.text, it.prompt, story.level, it.type);
+  it.result = result;
+  it.checked = true;
+  if (result.pass) {
+    if (it.attempts > 1) story.firstTryAllPass = false;
+    it.passed = true;
+    toast(`Prompt passed — ${result.passed}/${result.total} rubric checks ✓`, '✨');
+  } else {
+    story.firstTryAllPass = false;
+    toast(`${result.passed}/${result.total} checks passed — keep editing`, '💪');
+  }
+  renderStory();
+}
+
+function nextStoryPrompt() {
+  const next = story.items.findIndex((s, i) => i > story.index && !s.passed);
+  if (next >= 0) { story.index = next; renderStory(); return; }
+  const any = story.items.findIndex(s => !s.passed);
+  if (any >= 0) { story.index = any; renderStory(); return; }
+  finishStoryUnit();
+}
+
+function finishStoryUnit() {
+  const u = story.unit;
+  const lvl = story.level;
+  const key = `${u.id}_L${lvl}_STORY`;
+  const firstTime = !state.completed[key];
+
+  const mult = lvl === 1 ? 1 : lvl === 2 ? 1.5 : 2;
+  let earned = Math.round(50 * mult * story.items.length); // 50 per passed prompt
+  if (story.firstTryAllPass) earned += Math.round(150 * mult);
+  if (firstTime) earned += Math.round(50 * mult);
+
+  state.points += earned;
+  state.completed[key] = { firstTry: story.firstTryAllPass, attempts: story.items.reduce((a, x) => a + x.attempts, 0), score: earned, mode: 'story' };
+  state.streak = (state.lastSession === todayStr() || !state.lastSession) ? state.streak + 1 : 1;
+  state.lastSession = todayStr();
+  if (story.firstTryAllPass) { awardBadge('star'); awardBadge('wordsmith'); }
+  saveState();
+  checkLevelBadges();
+
+  confetti();
+
+  const m = el('div');
+  m.appendChild(el('div', { style: { fontSize: '52px' } }, story.firstTryAllPass ? '✨' : '🎉'));
+  m.appendChild(el('h2', {}, story.firstTryAllPass ? 'Wordsmith Round!' : 'Round Complete!'));
+  m.appendChild(el('p', {}, story.firstTryAllPass
+    ? `${state.name}, you nailed all 3 prompts on the first check. Top-shelf writing!`
+    : `Awesome effort, ${state.name}. You finished ${u.name} on Level ${lvl}.`));
+  const row = el('div', { class: 'stat-row' });
+  row.appendChild(stat('XP earned', '+' + earned));
+  row.appendChild(stat('Total attempts', story.items.reduce((a, x) => a + x.attempts, 0)));
+  row.appendChild(stat('Streak', state.streak + ' 🔥'));
+  m.appendChild(row);
+
+  const btns = el('div', { class: 'row-wrap', style: { justifyContent: 'center', marginTop: '16px' } });
+  const idx = UNITS.findIndex(x => x.id === u.id);
+  let nextUnit = null;
+  for (let i = 1; i <= UNITS.length; i++) {
+    const cand = UNITS[(idx + i) % UNITS.length];
+    if (!state.completed[`${cand.id}_L${lvl}_STORY`]) { nextUnit = cand; break; }
+  }
+  if (nextUnit) {
+    btns.appendChild(el('button', {
+      class: 'btn primary lg',
+      onclick: () => { closeModal(); startStory(nextUnit.id); }
+    }, `Next: ${nextUnit.emoji} ${nextUnit.name} →`));
+  } else {
+    btns.appendChild(el('button', { class: 'btn primary lg', onclick: () => { closeModal(); story = null; render(); } }, 'Back to Topics'));
+  }
+  btns.appendChild(el('button', { class: 'btn ghost', onclick: () => { closeModal(); story = null; render(); } }, 'Home'));
   m.appendChild(btns);
   openModal(m);
 }
