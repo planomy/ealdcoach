@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="expires" content="0" />
+<title>EALD Coach</title>
+<style>
+  :root {
+    --bg-0: #07091a;
+    --bg-1: #0d1230;
+    --bg-2: #131a44;
+    --panel: rgba(255,255,255,0.06);
+    --panel-2: rgba(255,255,255,0.10);
+    --border: rgba(255,255,255,0.14);
+    --text: #eaf0ff;
+    --muted: #9aa8d6;
+    --accent: #21e6c1;
+    --accent-2: #5cb8ff;
+    --warn: #ffb020;
+    --bad: #ff5a7a;
+    --good: #4ade80;
+    --gold: #ffd166;
+    --silver: #d6dde9;
+    --bronze: #d08359;
+    --narr: #ffb86b;
+    --pers: #ff77b7;
+    --info: #6be3ff;
+    --shadow: 0 10px 30px rgba(0,0,0,0.45);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:
+      radial-gradient(1200px 800px at 10% -10%, #1a2370 0%, transparent 60%),
+      radial-gradient(1000px 700px at 110% 10%, #4b1d7a 0%, transparent 55%),
+      radial-gradient(900px 700px at 50% 120%, #003f5c 0%, transparent 60%),
+      linear-gradient(180deg, var(--bg-0), var(--bg-1) 60%, var(--bg-2));
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+  body::before {
+    /* starfield */
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20px 30px, #ffffffaa, transparent),
+      radial-gradient(1.5px 1.5px at 200px 120px, #ffffff80, transparent),
+      radial-gradient(2px 2px at 400px 60px, #ffffff90, transparent),
+      radial-gradient(1.5px 1.5px at 600px 200px, #ffffff70, transparent),
+      radial-gradient(2px 2px at 800px 100px, #ffffffa0, transparent),
+      radial-gradient(1.5px 1.5px at 120px 300px, #ffffff60, transparent),
+      radial-gradient(1.5px 1.5px at 700px 350px, #ffffff90, transparent),
+      radial-gradient(2px 2px at 1000px 250px, #ffffff80, transparent),
+      radial-gradient(1.5px 1.5px at 300px 450px, #ffffff80, transparent),
+      radial-gradient(1.5px 1.5px at 900px 500px, #ffffff70, transparent);
+    background-size: 1100px 600px;
+    background-repeat: repeat;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 20px 18px 80px; }
+
+  /* Header */
+  .topbar {
+    display: flex; align-items: center; gap: 14px; padding: 10px 14px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: 0.5px;
+    font-size: 18px;
+  }
+  .brand .logo {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: conic-gradient(from 210deg, #21e6c1, #5cb8ff, #ff77b7, #ffd166, #21e6c1);
+    display: grid; place-items: center; color: #0b0f2a; font-weight: 900; font-size: 18px;
+    box-shadow: 0 0 24px rgba(33,230,193,0.45);
+  }
+  .topbar .spacer { flex: 1; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border);
+    font-size: 13px; color: var(--text);
+  }
+  .chip strong { color: #fff; }
+  .chip .pts { color: var(--gold); font-weight: 800; }
+  .chip .lvl { color: var(--accent); font-weight: 800; }
+  .chip .name { color: var(--accent-2); font-weight: 700; max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    padding: 10px 14px; border-radius: 12px; cursor: pointer; font-weight: 700;
+    transition: transform .08s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    font-size: 14px;
+    user-select: none;
+  }
+  .btn:hover { background: rgba(255,255,255,0.14); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #04121d; border-color: transparent; box-shadow: 0 8px 20px rgba(33,230,193,0.35);
+  }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.ghost { background: transparent; }
+  .btn.danger { background: linear-gradient(135deg, #ff5a7a, #ff8a3d); color: #1a0b0b; }
+  .btn.warn { background: linear-gradient(135deg, #ffd166, #ffb020); color: #2b1d04; }
+  .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+  .btn.lg { padding: 14px 22px; font-size: 16px; border-radius: 14px; }
+
+  /* Panels */
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 18px;
+    padding: 20px; box-shadow: var(--shadow); backdrop-filter: blur(8px);
+  }
+
+  /* Hero */
+  .hero { margin-top: 18px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+  .hero h1 {
+    margin: 0 0 8px; font-size: clamp(28px, 4vw, 40px); line-height: 1.05;
+    background: linear-gradient(120deg, #fff, #b7d8ff 60%, #b7ffe6);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    letter-spacing: 0.2px;
+  }
+  .hero p { color: var(--muted); margin: 0 0 16px; font-size: 15px; line-height: 1.5; }
+
+  /* Level selector */
+  .level-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .level-card {
+    flex: 1 1 0; min-width: 130px;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    border-radius: 14px; padding: 14px; cursor: pointer; text-align: left;
+    transition: transform .12s ease, border-color .15s ease, background .15s ease;
+  }
+  .level-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.3); }
+  .level-card.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(33,230,193,0.25), 0 8px 22px rgba(33,230,193,0.15); }
+  .level-card .l-num { font-size: 26px; font-weight: 900; }
+  .level-card .l-title { font-weight: 700; }
+  .level-card .l-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+  /* Unit grid */
+  .units {
+    display: grid; gap: 14px; margin-top: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  }
+  .unit {
+    position: relative;
+    border: 1px solid var(--border); background: var(--panel-2);
+    border-radius: 16px; padding: 16px; cursor: pointer;
+    transition: transform .12s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    overflow: hidden;
+  }
+  .unit:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.28); box-shadow: 0 12px 30px rgba(0,0,0,0.35); }
+  .unit .emoji { font-size: 38px; line-height: 1; }
+  .unit .uname { margin-top: 8px; font-weight: 800; font-size: 16px; }
+  .unit .stars { margin-top: 10px; display: flex; gap: 4px; font-size: 14px; color: #4a5290; }
+  .unit .stars .on { color: var(--gold); text-shadow: 0 0 10px rgba(255,209,102,0.7); }
+  .unit .corner { position: absolute; top: 10px; right: 10px; font-size: 11px; color: var(--muted); }
+  .unit.done { background: linear-gradient(160deg, rgba(33,230,193,0.18), rgba(92,184,255,0.08)); border-color: rgba(33,230,193,0.5); }
+  .unit .progress {
+    margin-top: 10px; height: 6px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden;
+  }
+  .unit .progress > div {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    width: 0%; transition: width .4s ease;
+  }
+
+  /* Name screen */
+  .center-screen {
+    min-height: 70vh; display: grid; place-items: center;
+  }
+  .name-card {
+    width: 100%; max-width: 520px;
+    text-align: center;
+  }
+  .name-card h2 { margin: 0 0 6px; font-size: 28px; }
+  .name-card p { color: var(--muted); margin: 0 0 16px; }
+  .name-card input {
+    width: 100%; padding: 14px 16px; font-size: 18px; color: var(--text);
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px;
+    outline: none; text-align: center;
+  }
+  .name-card input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(33,230,193,0.2); }
+
+  /* Quiz */
+  .quiz-header { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+  .quiz-header .crumb { color: var(--muted); font-size: 13px; }
+  .quiz-title { display: flex; align-items: center; gap: 12px; }
+  .quiz-title .e { font-size: 36px; }
+  .quiz-title h2 { margin: 0; font-size: 24px; }
+
+  .progress-bar { height: 10px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; margin-top: 14px; }
+  .progress-bar > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 0%; transition: width .3s ease; }
+
+  .sentences { display: grid; gap: 12px; margin-top: 16px; }
+  .qcard {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px; transition: border-color .15s ease, background .15s ease;
+  }
+  .qcard.correct { border-color: rgba(74,222,128,0.6); background: linear-gradient(160deg, rgba(74,222,128,0.10), transparent 70%); }
+  .qcard.wrong { border-color: rgba(255,90,122,0.6); background: linear-gradient(160deg, rgba(255,90,122,0.10), transparent 70%); }
+  .qcard.locked input { opacity: 0.7; }
+
+  .qhead { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .tag {
+    font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .tag.narr { background: rgba(255,184,107,0.18); color: var(--narr); border: 1px solid rgba(255,184,107,0.35); }
+  .tag.pers { background: rgba(255,119,183,0.18); color: var(--pers); border: 1px solid rgba(255,119,183,0.35); }
+  .tag.info { background: rgba(107,227,255,0.18); color: var(--info); border: 1px solid rgba(107,227,255,0.35); }
+
+  .qnum { color: var(--muted); font-size: 12px; font-weight: 700; }
+  .zh {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", -apple-system, sans-serif;
+    font-size: 22px; line-height: 1.4; margin: 4px 0 10px;
+    color: #ffffff;
+  }
+  .qcard input[type="text"] {
+    width: 100%; padding: 12px 14px; font-size: 16px; color: var(--text);
+    background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 10px; outline: none;
+    font-family: inherit;
+  }
+  .qcard input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(33,230,193,0.18); }
+  .feedback {
+    margin-top: 8px; font-size: 13px; display: none;
+  }
+  .qcard.correct .feedback,
+  .qcard.wrong .feedback { display: block; }
+  .feedback .ok { color: var(--good); font-weight: 800; }
+  .feedback .no { color: var(--bad); font-weight: 800; }
+  .feedback .expect { color: var(--muted); }
+  .feedback .expect b { color: #fff; }
+
+  .quiz-actions {
+    position: sticky; bottom: 14px; margin-top: 16px;
+    display: flex; gap: 10px; justify-content: space-between; align-items: center;
+    background: rgba(7,9,26,0.7); backdrop-filter: blur(8px); border: 1px solid var(--border);
+    border-radius: 14px; padding: 10px 12px;
+  }
+  .quiz-actions .info { color: var(--muted); font-size: 13px; }
+
+  /* Results / celebration */
+  .toast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    background: rgba(13,18,48,0.95); border: 1px solid var(--border); padding: 12px 16px;
+    border-radius: 14px; color: var(--text); display: flex; gap: 10px; align-items: center;
+    box-shadow: var(--shadow); z-index: 50; opacity: 0; pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, -6px); pointer-events: auto; }
+  .toast .em { font-size: 22px; }
+
+  /* Modal */
+  .modal-back {
+    position: fixed; inset: 0; background: rgba(2,4,16,0.75); display: none;
+    align-items: center; justify-content: center; z-index: 100; padding: 18px;
+    backdrop-filter: blur(6px);
+  }
+  .modal-back.show { display: flex; }
+  .modal {
+    width: 100%; max-width: 520px; background: linear-gradient(160deg, #1a2470, #0e1338);
+    border: 1px solid var(--border); border-radius: 20px; padding: 24px; text-align: center;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    animation: pop .25s ease;
+  }
+  @keyframes pop { from { transform: scale(.9); opacity: 0;} to { transform: scale(1); opacity: 1;} }
+  .modal h2 { margin: 0 0 6px; font-size: 28px; }
+  .modal p { color: var(--muted); margin: 0 0 14px; }
+  .badges-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+  .badge {
+    width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 30% 25%, #fff5, transparent 50%), linear-gradient(135deg, #6b7280, #374151);
+    font-size: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    border: 2px solid rgba(255,255,255,0.18);
+  }
+  .badge.bronze { background: radial-gradient(circle at 30% 25%, #fff7, transparent 55%), linear-gradient(135deg, #d08359, #8a4b2a); }
+  .badge.silver { background: radial-gradient(circle at 30% 25%, #fff8, transparent 55%), linear-gradient(135deg, #e2e8f0, #94a3b8); }
+  .badge.gold   { background: radial-gradient(circle at 30% 25%, #fff8, transparent 55%), linear-gradient(135deg, #ffd166, #b8862a); }
+  .badge.star   { background: radial-gradient(circle at 30% 25%, #fff8, transparent 55%), linear-gradient(135deg, #ff77b7, #6b1f8a); }
+  .badge.master { background: radial-gradient(circle at 30% 25%, #fff8, transparent 55%), conic-gradient(from 0deg, #21e6c1, #5cb8ff, #ff77b7, #ffd166, #21e6c1); }
+
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 99; }
+  .confetti i {
+    position: absolute; top: -10px; width: 8px; height: 14px; border-radius: 2px;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+  }
+
+  /* Achievements drawer */
+  .stat-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .stat {
+    flex: 1 1 130px; background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px;
+  }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat .v { font-weight: 800; font-size: 18px; }
+
+  .section-title { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; margin: 18px 0 8px; }
+
+  .footer-note { color: var(--muted); font-size: 12px; text-align: center; margin-top: 24px; }
+
+  .row-wrap { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  .pill {
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border); padding: 6px 10px;
+    border-radius: 999px; font-size: 12px; color: var(--muted);
+  }
+
+  .link {
+    background: none; border: none; color: var(--accent-2); cursor: pointer; font-weight: 700; padding: 0;
+  }
+  .link:hover { text-decoration: underline; }
+
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  .shake { animation: shake .25s ease 1; }
+
+  @keyframes glow { 0%,100% { box-shadow: 0 0 0 rgba(74,222,128,0); } 50% { box-shadow: 0 0 24px rgba(74,222,128,0.35); } }
+  .glow { animation: glow 1s ease 1; }
+
+  /* small screens */
+  @media (max-width: 520px) {
+    .topbar { padding: 8px 10px; }
+    .brand { font-size: 16px; }
+    .panel { padding: 16px; }
+    .zh { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<div class="toast" id="toast"><span class="em">⭐</span><span id="toastText">Nice!</span></div>
+
+<div class="modal-back" id="modalBack">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<script>
+/* ============================================================
+   EALD COACH
+   Single-file translation practice for EALD students (~Yr 7).
+   Mandarin -> English, 10 units, 3 levels, 9 sentences per run.
+   ============================================================ */
+const APP_VERSION = 'v1.2 (feedback visible + 2-attempt reveal)';
+
+/* ------------------------- CONTENT ------------------------- */
+const UNITS = [
+  {
+    id: 'insects', name: 'Insects', emoji: '🐛',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '我看见一只大蚂蚁。', en: 'I saw a big ant.' },
+          { zh: '蜜蜂飞到花上。', en: 'The bee flew to the flower.' },
+          { zh: '小男孩抓到一只蝴蝶。', en: 'The little boy caught a butterfly.' }
+        ],
+        persuasive: [
+          { zh: '我觉得蜜蜂非常重要。', en: 'I think bees are very important.' },
+          { zh: '我们应该保护昆虫。', en: 'We should protect insects.' },
+          { zh: '蚂蚁很厉害，不要杀它们。', en: 'Ants are amazing, do not kill them.' }
+        ],
+        informative: [
+          { zh: '蚂蚁有六条腿。', en: 'Ants have six legs.' },
+          { zh: '蜜蜂可以做蜂蜜。', en: 'Bees can make honey.' },
+          { zh: '蝴蝶有彩色的翅膀。', en: 'Butterflies have colourful wings.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '昨天我在公园里看见一只巨大的甲虫。', en: 'Yesterday I saw a huge beetle in the park.' },
+          { zh: '那只蚂蚁搬着一片大叶子回家。', en: 'The ant was carrying a big leaf home.' },
+          { zh: '我的弟弟很怕蜜蜂，所以他跑得很快。', en: 'My little brother was afraid of bees, so he ran very fast.' }
+        ],
+        persuasive: [
+          { zh: '你应该学习昆虫，因为它们很有趣。', en: 'You should study insects because they are very interesting.' },
+          { zh: '杀死蜜蜂是不对的，因为它们帮助植物。', en: 'Killing bees is wrong because they help plants.' },
+          { zh: '每个人都应该保护昆虫的家园。', en: 'Everyone should protect the homes of insects.' }
+        ],
+        informative: [
+          { zh: '蚂蚁住在地下的洞穴里。', en: 'Ants live in holes under the ground.' },
+          { zh: '蝴蝶以前是毛毛虫。', en: 'Butterflies were caterpillars before.' },
+          { zh: '蜜蜂用花粉做出蜂蜜。', en: 'Bees use pollen to make honey.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '那天下午，我和朋友在森林里发现了一群罕见的金色甲虫。', en: 'That afternoon, my friend and I discovered a group of rare golden beetles in the forest.' },
+          { zh: '那只勇敢的小蚂蚁独自把一大块面包搬回了它的巢穴。', en: 'The brave little ant carried a large piece of bread back to its nest by itself.' },
+          { zh: '当我静静地坐在草地上时，一只美丽的蓝蝴蝶落在了我的手指上。', en: 'When I sat quietly on the grass, a beautiful blue butterfly landed on my finger.' }
+        ],
+        persuasive: [
+          { zh: '我们必须停止使用杀虫剂，因为它们正在消灭重要的昆虫。', en: 'We must stop using pesticides because they are destroying important insects.' },
+          { zh: '学校应该教学生关于昆虫的知识，这样他们就不会再害怕它们。', en: 'Schools should teach students about insects so that they will not be afraid of them anymore.' },
+          { zh: '如果没有蜜蜂，人类就无法生存，所以保护它们极其重要。', en: 'Without bees, humans cannot survive, so protecting them is extremely important.' }
+        ],
+        informative: [
+          { zh: '世界上有超过一百万种不同种类的昆虫。', en: 'There are more than one million different kinds of insects in the world.' },
+          { zh: '蜜蜂通过跳一种特别的舞蹈来告诉其他蜜蜂花在哪里。', en: 'Bees tell other bees where the flowers are by doing a special dance.' },
+          { zh: '蚂蚁可以举起比自己重五十倍的东西。', en: 'Ants can lift things that are fifty times heavier than themselves.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'sports', name: 'Sports', emoji: '⚽',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '我和爸爸踢足球。', en: 'I played soccer with my dad.' },
+          { zh: '小明跑得很快。', en: 'Xiao Ming ran very fast.' },
+          { zh: '我们的队伍赢了比赛。', en: 'Our team won the game.' }
+        ],
+        persuasive: [
+          { zh: '每个孩子都应该做运动。', en: 'Every kid should do sport.' },
+          { zh: '足球是最好的运动。', en: 'Soccer is the best sport.' },
+          { zh: '运动让我们更健康。', en: 'Sport makes us healthier.' }
+        ],
+        informative: [
+          { zh: '一场足球比赛有十一名球员。', en: 'A soccer team has eleven players.' },
+          { zh: '篮球比赛有四节。', en: 'A basketball game has four quarters.' },
+          { zh: '游泳是一种很好的运动。', en: 'Swimming is a great sport.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '上周六我参加了学校的运动会。', en: 'Last Saturday I joined the school sports day.' },
+          { zh: '在最后一分钟，我们的队伍进了一个球。', en: 'In the last minute, our team scored a goal.' },
+          { zh: '虽然我很累，但是我跑完了整个比赛。', en: 'Although I was very tired, I finished the whole race.' }
+        ],
+        persuasive: [
+          { zh: '学生每天都应该锻炼至少一个小时。', en: 'Students should exercise for at least one hour every day.' },
+          { zh: '团队运动比单人运动更有趣。', en: 'Team sports are more fun than individual sports.' },
+          { zh: '学校应该提供更多的运动课程。', en: 'Schools should provide more sports classes.' }
+        ],
+        informative: [
+          { zh: '澳大利亚式橄榄球是澳大利亚很受欢迎的运动。', en: 'Australian Rules football is a very popular sport in Australia.' },
+          { zh: '奥运会每四年举办一次。', en: 'The Olympic Games are held every four years.' },
+          { zh: '网球比赛通常打三盘或五盘。', en: 'Tennis matches are usually played in three or five sets.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '当裁判吹响最后哨声时，我的队友们全都激动地跑过来抱住我。', en: 'When the referee blew the final whistle, all my teammates ran over and hugged me with excitement.' },
+          { zh: '尽管下着大雨，我们仍然继续比赛，最终以一分之差获胜。', en: 'Even though it was raining heavily, we kept playing and finally won by one point.' },
+          { zh: '那位年轻的运动员在受伤之后，经过几个月的训练，终于回到了赛场。', en: 'After his injury, the young athlete finally returned to the field after months of training.' }
+        ],
+        persuasive: [
+          { zh: '父母应该鼓励孩子尝试不同的运动，而不是只专注一项。', en: 'Parents should encourage their children to try different sports instead of focusing on only one.' },
+          { zh: '我相信团队合作比个人才能更重要，因为团结能赢得比赛。', en: 'I believe teamwork is more important than individual talent because unity wins games.' },
+          { zh: '体育课不应该被取消，因为它对学生的身心健康都非常重要。', en: 'PE classes should not be cancelled because they are very important for students\u2019 physical and mental health.' }
+        ],
+        informative: [
+          { zh: '板球起源于英国，现在在许多国家都很受欢迎。', en: 'Cricket originated in England and is now popular in many countries.' },
+          { zh: '马拉松比赛的长度是大约四十二公里。', en: 'A marathon race is about forty-two kilometres long.' },
+          { zh: '世界杯足球赛是世界上观众最多的体育赛事之一。', en: 'The FIFA World Cup is one of the most watched sporting events in the world.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'dinosaurs', name: 'Dinosaurs', emoji: '🦖',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '一只大恐龙走进森林。', en: 'A big dinosaur walked into the forest.' },
+          { zh: '小恐龙吃树叶。', en: 'The little dinosaur ate leaves.' },
+          { zh: '霸王龙大声地吼叫。', en: 'The T-Rex roared loudly.' }
+        ],
+        persuasive: [
+          { zh: '恐龙是最酷的动物。', en: 'Dinosaurs are the coolest animals.' },
+          { zh: '每个小孩都应该学习恐龙。', en: 'Every kid should learn about dinosaurs.' },
+          { zh: '博物馆是很棒的地方。', en: 'Museums are great places.' }
+        ],
+        informative: [
+          { zh: '恐龙生活在很久以前。', en: 'Dinosaurs lived a long time ago.' },
+          { zh: '有些恐龙吃肉，有些吃植物。', en: 'Some dinosaurs ate meat and some ate plants.' },
+          { zh: '霸王龙有非常大的牙齿。', en: 'T-Rex had very big teeth.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '那只小恐龙在湖边找到了一些水果。', en: 'The little dinosaur found some fruit by the lake.' },
+          { zh: '当火山爆发时，恐龙们四处逃跑。', en: 'When the volcano erupted, the dinosaurs ran in every direction.' },
+          { zh: '科学家在沙漠里发现了一个巨大的恐龙蛋。', en: 'The scientist found a huge dinosaur egg in the desert.' }
+        ],
+        persuasive: [
+          { zh: '学校应该带学生去参观恐龙博物馆。', en: 'Schools should take students to visit dinosaur museums.' },
+          { zh: '研究恐龙能帮助我们了解地球的历史。', en: 'Studying dinosaurs can help us understand the history of the Earth.' },
+          { zh: '电影应该让恐龙看起来更真实。', en: 'Movies should make dinosaurs look more realistic.' }
+        ],
+        informative: [
+          { zh: '恐龙在大约六千五百万年前灭绝了。', en: 'Dinosaurs became extinct about sixty-five million years ago.' },
+          { zh: '迅猛龙跑得非常快而且很聪明。', en: 'Velociraptors ran very fast and were very smart.' },
+          { zh: '腕龙是最高的恐龙之一。', en: 'Brachiosaurus was one of the tallest dinosaurs.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '在那个潮湿的早晨，一只年幼的迅猛龙悄悄地穿过了茂密的丛林。', en: 'On that damp morning, a young velociraptor moved quietly through the thick jungle.' },
+          { zh: '当那块巨大的陨石撞击地球时，天空瞬间被尘埃和火焰覆盖了。', en: 'When the huge meteorite hit the Earth, the sky was instantly covered by dust and fire.' },
+          { zh: '那名年轻的古生物学家终于在悬崖边发现了一具完整的恐龙骨骼。', en: 'The young palaeontologist finally discovered a complete dinosaur skeleton near the cliff.' }
+        ],
+        persuasive: [
+          { zh: '政府应该投资更多的钱用于古生物学研究。', en: 'The government should invest more money in palaeontology research.' },
+          { zh: '我们应该保护化石遗址，因为它们告诉我们生命的故事。', en: 'We should protect fossil sites because they tell us the story of life.' },
+          { zh: '把恐龙带回地球是危险的，所以科学家不应该尝试克隆它们。', en: 'Bringing dinosaurs back to Earth is dangerous, so scientists should not try to clone them.' }
+        ],
+        informative: [
+          { zh: '现代鸟类被认为是恐龙的后代。', en: 'Modern birds are believed to be the descendants of dinosaurs.' },
+          { zh: '一些恐龙身上覆盖着羽毛而不是鳞片。', en: 'Some dinosaurs were covered in feathers instead of scales.' },
+          { zh: '通过研究牙齿，科学家可以知道恐龙吃什么。', en: 'By studying teeth, scientists can know what dinosaurs ate.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'space', name: 'Space', emoji: '🚀',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '宇航员飞到月球。', en: 'The astronaut flew to the Moon.' },
+          { zh: '我看到一颗很亮的星星。', en: 'I saw a very bright star.' },
+          { zh: '火箭升上了天空。', en: 'The rocket went up into the sky.' }
+        ],
+        persuasive: [
+          { zh: '我们应该探索太空。', en: 'We should explore space.' },
+          { zh: '每个小孩都应该学习星星。', en: 'Every kid should learn about the stars.' },
+          { zh: '当宇航员是最酷的工作。', en: 'Being an astronaut is the coolest job.' }
+        ],
+        informative: [
+          { zh: '地球围绕太阳转。', en: 'The Earth goes around the Sun.' },
+          { zh: '月亮没有自己的光。', en: 'The Moon has no light of its own.' },
+          { zh: '太阳系有八大行星。', en: 'The Solar System has eight planets.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '那位年轻的宇航员第一次走出了空间站。', en: 'The young astronaut walked out of the space station for the first time.' },
+          { zh: '当我们望向天空时，我们看到了一颗划过的流星。', en: 'When we looked at the sky, we saw a shooting star fly past.' },
+          { zh: '火箭在巨大的火焰中慢慢离开了地面。', en: 'The rocket slowly left the ground in huge flames.' }
+        ],
+        persuasive: [
+          { zh: '各国应该一起合作探索宇宙。', en: 'Countries should work together to explore the universe.' },
+          { zh: '太空旅行不应该只属于富人。', en: 'Space travel should not be only for rich people.' },
+          { zh: '我们必须保护地球，因为它是我们唯一的家。', en: 'We must protect the Earth because it is our only home.' }
+        ],
+        informative: [
+          { zh: '光从太阳到地球大约需要八分钟。', en: 'Light takes about eight minutes to travel from the Sun to the Earth.' },
+          { zh: '木星是太阳系中最大的行星。', en: 'Jupiter is the largest planet in the Solar System.' },
+          { zh: '国际空间站围绕地球飞行。', en: 'The International Space Station flies around the Earth.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '当飞船终于到达火星时，宇航员们激动得几乎说不出话来。', en: 'When the spacecraft finally reached Mars, the astronauts were so excited they could hardly speak.' },
+          { zh: '在那个寒冷的夜晚，我躺在草地上，凝视着满天的星星。', en: 'On that cold night, I lay on the grass and stared at the sky full of stars.' },
+          { zh: '虽然这次任务很危险，但是船员们仍然勇敢地走进了未知的太空。', en: 'Although the mission was dangerous, the crew still bravely stepped into the unknown space.' }
+        ],
+        persuasive: [
+          { zh: '政府应该花更多的钱探索宇宙，因为这能激励下一代。', en: 'Governments should spend more money exploring the universe because it inspires the next generation.' },
+          { zh: '如果我们想保护人类，就必须开始寻找其他可以居住的星球。', en: 'If we want to protect humanity, we must start searching for other planets to live on.' },
+          { zh: '太空垃圾是一个严重的问题，我们必须立即采取行动。', en: 'Space junk is a serious problem and we must take action immediately.' }
+        ],
+        informative: [
+          { zh: '黑洞的引力非常强，连光都无法逃脱。', en: 'The gravity of a black hole is so strong that even light cannot escape.' },
+          { zh: '银河系是包含我们太阳系的星系。', en: 'The Milky Way is the galaxy that contains our Solar System.' },
+          { zh: '科学家相信宇宙在不断膨胀。', en: 'Scientists believe that the universe is constantly expanding.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'vehicles', name: 'Vehicles', emoji: '🏎️',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '红色的汽车开得很快。', en: 'The red car drove very fast.' },
+          { zh: '我和爸爸坐火车。', en: 'I took the train with my dad.' },
+          { zh: '司机停了下来吃午饭。', en: 'The driver stopped to eat lunch.' }
+        ],
+        persuasive: [
+          { zh: '我们应该多坐公共汽车。', en: 'We should take the bus more often.' },
+          { zh: '骑自行车更健康。', en: 'Riding a bike is healthier.' },
+          { zh: '汽车太多了，这不好。', en: 'There are too many cars and this is not good.' }
+        ],
+        informative: [
+          { zh: '汽车通常有四个轮子。', en: 'Cars usually have four wheels.' },
+          { zh: '火车在铁轨上跑。', en: 'Trains run on tracks.' },
+          { zh: '飞机在天上飞。', en: 'Planes fly in the sky.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '那辆崭新的赛车在终点线前一刻冲了过去。', en: 'The brand-new race car crossed the finish line at the last moment.' },
+          { zh: '当公共汽车到达车站时，雨已经停了。', en: 'When the bus arrived at the stop, the rain had already stopped.' },
+          { zh: '司机小心地把卡车开过了狭窄的桥。', en: 'The driver carefully drove the truck across the narrow bridge.' }
+        ],
+        persuasive: [
+          { zh: '城市应该建造更多的自行车道。', en: 'Cities should build more bike lanes.' },
+          { zh: '电动汽车比汽油车更环保。', en: 'Electric cars are more eco-friendly than petrol cars.' },
+          { zh: '我们必须减少道路上的汽车数量。', en: 'We must reduce the number of cars on the roads.' }
+        ],
+        informative: [
+          { zh: '澳大利亚人靠左行驶。', en: 'Australians drive on the left side of the road.' },
+          { zh: '一级方程式赛车的速度可以超过每小时三百公里。', en: 'Formula 1 cars can travel faster than three hundred kilometres per hour.' },
+          { zh: '高铁是一种非常快速的火车。', en: 'High-speed rail is a very fast type of train.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '当那辆古老的红色卡车终于发动起来时，我的爷爷开心地笑了。', en: 'When the old red truck finally started, my grandfather laughed happily.' },
+          { zh: '在那条尘土飞扬的路上，那辆四驱车小心翼翼地穿过了险峻的山道。', en: 'On that dusty road, the four-wheel drive carefully crossed the steep mountain pass.' },
+          { zh: '尽管发动机出了问题，这位年轻的工程师还是修好了那辆破旧的摩托车。', en: 'Although there was a problem with the engine, the young engineer still fixed the old motorbike.' }
+        ],
+        persuasive: [
+          { zh: '政府应该投资公共交通，以减少城市的污染。', en: 'The government should invest in public transport to reduce pollution in cities.' },
+          { zh: '司机必须遵守交通规则，否则会发生严重的事故。', en: 'Drivers must follow the road rules, otherwise serious accidents will happen.' },
+          { zh: '我相信无人驾驶汽车将会让我们的道路更加安全。', en: 'I believe self-driving cars will make our roads safer.' }
+        ],
+        informative: [
+          { zh: '第一辆现代汽车是由卡尔·本茨在十九世纪八十年代发明的。', en: 'The first modern car was invented by Karl Benz in the 1880s.' },
+          { zh: '电动汽车不排放尾气，所以它们对环境更好。', en: 'Electric cars do not produce exhaust fumes, so they are better for the environment.' },
+          { zh: '澳大利亚最长的火车之一在皮尔巴拉地区运行。', en: 'One of the longest trains in Australia runs in the Pilbara region.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'animals', name: 'Wild Animals', emoji: '🦁',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '大狮子在树下睡觉。', en: 'The big lion slept under the tree.' },
+          { zh: '小猴子吃了一根香蕉。', en: 'The little monkey ate a banana.' },
+          { zh: '袋鼠跳过了围栏。', en: 'The kangaroo jumped over the fence.' }
+        ],
+        persuasive: [
+          { zh: '我们必须保护野生动物。', en: 'We must protect wild animals.' },
+          { zh: '动物园不应该太小。', en: 'Zoos should not be too small.' },
+          { zh: '人们不应该伤害动物。', en: 'People should not hurt animals.' }
+        ],
+        informative: [
+          { zh: '狮子住在非洲。', en: 'Lions live in Africa.' },
+          { zh: '袋鼠住在澳大利亚。', en: 'Kangaroos live in Australia.' },
+          { zh: '老虎是大型猫科动物。', en: 'Tigers are big cats.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '那只年轻的考拉慢慢地爬上了一棵高大的桉树。', en: 'The young koala slowly climbed up a tall gum tree.' },
+          { zh: '当太阳落山时，狼群开始在山上嚎叫。', en: 'When the sun set, the pack of wolves began to howl on the mountain.' },
+          { zh: '那只受伤的鹰被一位好心的农民救了。', en: 'The injured eagle was saved by a kind farmer.' }
+        ],
+        persuasive: [
+          { zh: '人们应该停止猎杀濒危动物。', en: 'People should stop hunting endangered animals.' },
+          { zh: '我们应该建立更多的国家公园来保护野生动物。', en: 'We should build more national parks to protect wild animals.' },
+          { zh: '把野生动物当作宠物是不对的。', en: 'It is wrong to keep wild animals as pets.' }
+        ],
+        informative: [
+          { zh: '袋熊是澳大利亚特有的有袋动物。', en: 'Wombats are marsupials found only in Australia.' },
+          { zh: '北极熊生活在北极地区。', en: 'Polar bears live in the Arctic region.' },
+          { zh: '大象是陆地上最大的动物。', en: 'Elephants are the largest animals on land.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '在那场可怕的丛林大火之后，那只小考拉被志愿者带到了安全的地方。', en: 'After the terrible bushfire, the little koala was taken to safety by the volunteers.' },
+          { zh: '当那只豹子悄悄地穿过草丛时，整个森林似乎都屏住了呼吸。', en: 'When the leopard quietly moved through the grass, the whole forest seemed to hold its breath.' },
+          { zh: '那位年轻的研究员花了好几个月观察那个鲸群的迁徙路线。', en: 'The young researcher spent several months observing the migration route of the whale pod.' }
+        ],
+        persuasive: [
+          { zh: '我们必须停止破坏雨林，否则许多动物将永远消失。', en: 'We must stop destroying rainforests, or many animals will disappear forever.' },
+          { zh: '动物园应该把动物的福利放在第一位，而不是利润。', en: 'Zoos should put the welfare of animals first, not profit.' },
+          { zh: '我相信教育是保护野生动物最有效的方法。', en: 'I believe education is the most effective way to protect wild animals.' }
+        ],
+        informative: [
+          { zh: '澳大利亚是世界上唯一有鸭嘴兽的地方。', en: 'Australia is the only place in the world where platypuses are found.' },
+          { zh: '大象通过低频声音进行远距离交流。', en: 'Elephants communicate over long distances using low-frequency sounds.' },
+          { zh: '气候变化正在威胁着许多极地动物的栖息地。', en: 'Climate change is threatening the habitats of many polar animals.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'food', name: 'Food', emoji: '🍕',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '我吃了一片大披萨。', en: 'I ate a big piece of pizza.' },
+          { zh: '妈妈做了汤。', en: 'Mum made some soup.' },
+          { zh: '我们晚饭吃了米饭。', en: 'We had rice for dinner.' }
+        ],
+        persuasive: [
+          { zh: '小孩子应该多吃水果。', en: 'Kids should eat more fruit.' },
+          { zh: '糖太多对身体不好。', en: 'Too much sugar is bad for you.' },
+          { zh: '每个人都应该尝试新的食物。', en: 'Everyone should try new foods.' }
+        ],
+        informative: [
+          { zh: '香蕉里有很多钾。', en: 'Bananas have a lot of potassium.' },
+          { zh: '面包是用面粉做的。', en: 'Bread is made from flour.' },
+          { zh: '牛奶来自奶牛。', en: 'Milk comes from cows.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '上个周末，我和奶奶一起做了一锅美味的饺子。', en: 'Last weekend, I made a pot of delicious dumplings with my grandma.' },
+          { zh: '当我打开烤箱时，整个厨房都充满了面包的香味。', en: 'When I opened the oven, the whole kitchen was filled with the smell of bread.' },
+          { zh: '虽然我不喜欢西兰花，但是我妈妈让我尝了一口。', en: 'Although I do not like broccoli, my mum made me try a bite.' }
+        ],
+        persuasive: [
+          { zh: '学校的食堂应该提供更健康的食物。', en: 'School canteens should provide healthier food.' },
+          { zh: '孩子们应该减少吃快餐。', en: 'Children should eat less fast food.' },
+          { zh: '学习做饭是一项非常重要的生活技能。', en: 'Learning to cook is a very important life skill.' }
+        ],
+        informative: [
+          { zh: '蔬菜含有许多对身体重要的维生素。', en: 'Vegetables contain many vitamins that are important for the body.' },
+          { zh: '寿司是一种来自日本的传统食物。', en: 'Sushi is a traditional food from Japan.' },
+          { zh: '吃早餐能帮助我们集中注意力学习。', en: 'Eating breakfast helps us focus on learning.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '那天晚上，整个家庭围坐在餐桌旁，分享着奶奶煮的特别的菜。', en: 'That night, the whole family sat around the table and shared the special dish that grandma had cooked.' },
+          { zh: '当那位年轻的厨师终于完成了他的第一道菜时，他的眼睛里充满了骄傲。', en: 'When the young chef finally finished his first dish, his eyes were full of pride.' },
+          { zh: '尽管这道食物看起来很奇怪，但是我决定鼓起勇气尝一尝。', en: 'Although the food looked strange, I decided to be brave and try it.' }
+        ],
+        persuasive: [
+          { zh: '我们必须减少食物浪费，因为世界上还有许多人在挨饿。', en: 'We must reduce food waste because there are still many people in the world who are hungry.' },
+          { zh: '政府应该对含糖饮料征收更高的税。', en: 'The government should put a higher tax on sugary drinks.' },
+          { zh: '我相信家庭一起吃晚餐能加强彼此之间的关系。', en: 'I believe eating dinner together as a family strengthens relationships.' }
+        ],
+        informative: [
+          { zh: '澳大利亚的肉派是一种非常受欢迎的传统食物。', en: 'The Australian meat pie is a very popular traditional food.' },
+          { zh: '巧克力来自一种叫做可可的植物。', en: 'Chocolate comes from a plant called cacao.' },
+          { zh: '吃太多加工食品可能会导致严重的健康问题。', en: 'Eating too much processed food can cause serious health problems.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'games', name: 'Video Games', emoji: '🎮',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '我和朋友玩了一个游戏。', en: 'I played a game with my friend.' },
+          { zh: '他打败了大老板。', en: 'He defeated the big boss.' },
+          { zh: '我在新关卡里赢了。', en: 'I won in the new level.' }
+        ],
+        persuasive: [
+          { zh: '玩太多游戏对眼睛不好。', en: 'Playing too many games is bad for your eyes.' },
+          { zh: '游戏可以教我们新东西。', en: 'Games can teach us new things.' },
+          { zh: '小孩子应该每天少玩一些。', en: 'Children should play a little less every day.' }
+        ],
+        informative: [
+          { zh: '电子游戏是用电脑做的。', en: 'Video games are made with computers.' },
+          { zh: '《我的世界》是一个非常受欢迎的游戏。', en: 'Minecraft is a very popular game.' },
+          { zh: '游戏角色有不同的能力。', en: 'Game characters have different abilities.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '我和我的队友花了三个小时才打败那个最终的老板。', en: 'My teammates and I spent three hours defeating the final boss.' },
+          { zh: '当那个隐藏的宝箱终于打开时，我激动地跳了起来。', en: 'When the hidden chest finally opened, I jumped up with excitement.' },
+          { zh: '虽然我输了那场比赛，但是我学到了一个新的策略。', en: 'Although I lost that match, I learned a new strategy.' }
+        ],
+        persuasive: [
+          { zh: '父母应该和孩子们一起玩电子游戏。', en: 'Parents should play video games together with their children.' },
+          { zh: '我相信电子竞技应该被认可为一种真正的运动。', en: 'I believe esports should be recognised as a real sport.' },
+          { zh: '玩家应该尊重网上的其他玩家。', en: 'Players should respect other players online.' }
+        ],
+        informative: [
+          { zh: '电子竞技吸引了全世界数百万的观众。', en: 'Esports attracts millions of viewers around the world.' },
+          { zh: '许多游戏需要团队合作才能获胜。', en: 'Many games need teamwork in order to win.' },
+          { zh: '游戏开发者需要会编程和讲故事。', en: 'Game developers need to know coding and storytelling.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '在那场紧张的决赛中，我们的队伍在最后一秒以两分的优势获胜。', en: 'In that tense final match, our team won by two points in the last second.' },
+          { zh: '虽然那个谜题看起来很难，但是我和我朋友最终一起解开了它。', en: 'Although the puzzle looked very hard, my friend and I finally solved it together.' },
+          { zh: '当我第一次戴上虚拟现实头盔时，我感觉自己真的进入了另一个世界。', en: 'When I put on the VR headset for the first time, I really felt as if I had entered another world.' }
+        ],
+        persuasive: [
+          { zh: '我们必须意识到长时间玩游戏会影响身体健康。', en: 'We must realise that playing games for a long time can affect physical health.' },
+          { zh: '学校应该利用电子游戏来让学习变得更有趣。', en: 'Schools should use video games to make learning more interesting.' },
+          { zh: '游戏公司有责任保护年轻玩家免受网络欺凌。', en: 'Gaming companies have a responsibility to protect young players from cyberbullying.' }
+        ],
+        informative: [
+          { zh: '全球游戏产业现在比电影业还要赚钱。', en: 'The global gaming industry now makes more money than the film industry.' },
+          { zh: '一些研究表明，适量玩游戏可以提高解决问题的能力。', en: 'Some studies show that moderate gaming can improve problem-solving skills.' },
+          { zh: '现代游戏使用复杂的人工智能来创造对手。', en: 'Modern games use complex artificial intelligence to create opponents.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'adventure', name: 'Adventure', emoji: '🏕️',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '我们在森林里露营。', en: 'We camped in the forest.' },
+          { zh: '爸爸生了一堆火。', en: 'Dad made a fire.' },
+          { zh: '我们看到了一只大鸟。', en: 'We saw a big bird.' }
+        ],
+        persuasive: [
+          { zh: '每个小孩都应该去露营。', en: 'Every kid should go camping.' },
+          { zh: '我们必须把垃圾带走。', en: 'We must take our rubbish with us.' },
+          { zh: '在野外要小心。', en: 'Be careful in the wild.' }
+        ],
+        informative: [
+          { zh: '帐篷可以保护我们不被雨淋。', en: 'A tent keeps us safe from the rain.' },
+          { zh: '地图能告诉我们方向。', en: 'A map tells us the direction.' },
+          { zh: '指南针指向北方。', en: 'A compass points to the north.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '我和爸爸沿着河边走了好几个小时。', en: 'My dad and I walked along the river for many hours.' },
+          { zh: '当我们到达山顶时，太阳刚刚升起。', en: 'When we reached the top of the mountain, the sun was just rising.' },
+          { zh: '夜里我们听到了奇怪的声音，但是我们没有害怕。', en: 'At night we heard strange noises, but we were not afraid.' }
+        ],
+        persuasive: [
+          { zh: '父母应该鼓励孩子在外面玩。', en: 'Parents should encourage children to play outside.' },
+          { zh: '徒步旅行比看电视更好。', en: 'Hiking is better than watching TV.' },
+          { zh: '我们应该尊重大自然。', en: 'We should respect nature.' }
+        ],
+        informative: [
+          { zh: '蓝山是澳大利亚著名的徒步旅行地点。', en: 'The Blue Mountains is a famous hiking spot in Australia.' },
+          { zh: '在丛林徒步时，你应该带上很多水。', en: 'When you bushwalk, you should bring plenty of water.' },
+          { zh: '澳大利亚的灌木丛里有许多本土动物。', en: 'The Australian bush is home to many native animals.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '在那次危险的远足中，我们的向导帮助我们安全地穿过了险峻的山脊。', en: 'During the dangerous hike, our guide helped us safely cross the steep ridge.' },
+          { zh: '虽然天气突然变坏了，但是我们决定继续向山洞前进。', en: 'Although the weather suddenly turned bad, we decided to keep going towards the cave.' },
+          { zh: '当我们终于回到营地时，每个人都筋疲力尽但又非常自豪。', en: 'When we finally returned to the camp, everyone was exhausted but very proud.' }
+        ],
+        persuasive: [
+          { zh: '学校应该组织更多的户外探险活动。', en: 'Schools should organise more outdoor adventure activities.' },
+          { zh: '我相信冒险能教给孩子们勇气和坚持。', en: 'I believe adventure teaches children courage and persistence.' },
+          { zh: '我们必须保护我们的国家公园，这样未来几代人也可以享受它们。', en: 'We must protect our national parks so that future generations can also enjoy them.' }
+        ],
+        informative: [
+          { zh: '在徒步旅行前查看天气预报是非常重要的。', en: 'Checking the weather forecast before a hike is very important.' },
+          { zh: '澳大利亚的内陆地区在夏天可能会变得非常炎热和危险。', en: 'The Australian outback can become extremely hot and dangerous in summer.' },
+          { zh: '一个急救包是任何冒险中必不可少的装备。', en: 'A first-aid kit is essential equipment on any adventure.' }
+        ]
+      }
+    }
+  },
+
+  {
+    id: 'heroes', name: 'Superheroes', emoji: '🦸',
+    levels: {
+      1: {
+        narrative: [
+          { zh: '超级英雄救了那只猫。', en: 'The superhero saved the cat.' },
+          { zh: '坏人跑掉了。', en: 'The bad guy ran away.' },
+          { zh: '英雄飞过城市。', en: 'The hero flew over the city.' }
+        ],
+        persuasive: [
+          { zh: '每个人都可以成为英雄。', en: 'Everyone can be a hero.' },
+          { zh: '善良比力量更重要。', en: 'Kindness is more important than strength.' },
+          { zh: '我们应该帮助有困难的人。', en: 'We should help people in trouble.' }
+        ],
+        informative: [
+          { zh: '蜘蛛侠可以爬墙。', en: 'Spider-Man can climb walls.' },
+          { zh: '超人来自另一个星球。', en: 'Superman is from another planet.' },
+          { zh: '蝙蝠侠没有超能力。', en: 'Batman has no superpowers.' }
+        ]
+      },
+      2: {
+        narrative: [
+          { zh: '当城市陷入危险时，那位年轻的英雄毫不犹豫地冲了上去。', en: 'When the city was in danger, the young hero rushed in without hesitating.' },
+          { zh: '那个反派躲在阴影里，等待着完美的时机。', en: 'The villain hid in the shadows, waiting for the perfect moment.' },
+          { zh: '虽然她受伤了，但是她仍然救出了所有的孩子。', en: 'Although she was injured, she still saved all the children.' }
+        ],
+        persuasive: [
+          { zh: '电影应该展示更多的女性超级英雄。', en: 'Movies should show more female superheroes.' },
+          { zh: '真正的英雄是日常生活中帮助别人的人。', en: 'Real heroes are the people who help others in everyday life.' },
+          { zh: '我们必须教孩子们超能力不能解决一切问题。', en: 'We must teach children that superpowers cannot solve every problem.' }
+        ],
+        informative: [
+          { zh: '漫威和DC是两家最大的漫画公司。', en: 'Marvel and DC are the two biggest comic book companies.' },
+          { zh: '消防员和护士在现实生活中是真正的英雄。', en: 'Firefighters and nurses are real heroes in real life.' },
+          { zh: '许多超级英雄都有秘密身份。', en: 'Many superheroes have secret identities.' }
+        ]
+      },
+      3: {
+        narrative: [
+          { zh: '当那个庞大的怪物从海里出现时，整个城市都陷入了恐慌。', en: 'When the huge monster appeared from the sea, the whole city fell into panic.' },
+          { zh: '尽管她失去了她的能力，那位年轻的英雄仍然找到了拯救她朋友们的办法。', en: 'Although she had lost her powers, the young hero still found a way to save her friends.' },
+          { zh: '在那场漫长的战斗之后，他终于明白了，真正的力量来自于责任感。', en: 'After the long battle, he finally understood that true strength comes from a sense of responsibility.' }
+        ],
+        persuasive: [
+          { zh: '我相信我们应该庆祝那些没有超能力的日常英雄。', en: 'I believe we should celebrate everyday heroes who have no superpowers.' },
+          { zh: '电影制作者有责任避免在故事中宣扬暴力。', en: 'Filmmakers have a responsibility to avoid promoting violence in their stories.' },
+          { zh: '孩子们需要榜样，他们可以教给他们勇气和善良。', en: 'Children need role models who can teach them courage and kindness.' }
+        ],
+        informative: [
+          { zh: '第一本现代超级英雄漫画出版于一九三八年。', en: 'The first modern superhero comic was published in 1938.' },
+          { zh: '许多超级英雄的故事探讨了像偏见和正义这样的严肃话题。', en: 'Many superhero stories explore serious topics such as prejudice and justice.' },
+          { zh: '澳大利亚的志愿消防员每年都拯救无数的生命。', en: 'Volunteer firefighters in Australia save countless lives every year.' }
+        ]
+      }
+    }
+  }
+];
+
+/* --------------------- STATE / STORAGE --------------------- */
+const STORE_KEY = 'ealdcoach.v1';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return defaultState();
+    const s = JSON.parse(raw);
+    return Object.assign(defaultState(), s);
+  } catch (e) {
+    return defaultState();
+  }
+}
+function saveState() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+}
+function defaultState() {
+  return {
+    name: '',
+    points: 0,
+    selectedLevel: 1,
+    completed: {},          // key: `${unitId}_L${level}` -> { firstTry: bool, attempts: n, score: n }
+    badges: [],             // strings
+    streak: 0,
+    lastSession: null
+  };
+}
+let state = loadState();
+
+/* --------------------- HELPERS --------------------- */
+function $(sel, root = document) { return root.querySelector(sel); }
+function $$(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
+function el(tag, props = {}, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') e.className = v;
+    else if (k === 'style') Object.assign(e.style, v);
+    else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'html') e.innerHTML = v;
+    else if (v !== undefined && v !== null) e.setAttribute(k, v);
+  }
+  for (const c of children.flat()) {
+    if (c == null) continue;
+    e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  }
+  return e;
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* --------------------- MATCHING --------------------- */
+function normalize(s) {
+  return (s || '')
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
+    .replace(/[.,!?;:"'`~()\[\]{}<>\u3002\uFF0C\uFF01\uFF1F\u2014\u2013-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  let prev = new Array(n + 1);
+  let curr = new Array(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n];
+}
+function charSimilarity(a, b) {
+  const A = normalize(a), B = normalize(b);
+  if (!A && !B) return 1;
+  const maxLen = Math.max(A.length, B.length);
+  if (!maxLen) return 1;
+  return 1 - levenshtein(A, B) / maxLen;
+}
+function tokenSimilarity(a, b) {
+  const A = normalize(a).split(' ').filter(Boolean);
+  const B = normalize(b).split(' ').filter(Boolean);
+  if (!A.length && !B.length) return 1;
+  if (!A.length || !B.length) return 0;
+  const setA = new Set(A);
+  const setB = new Set(B);
+  let inter = 0;
+  for (const w of setA) if (setB.has(w)) inter++;
+  const union = setA.size + setB.size - inter;
+  return inter / union;
+}
+function isCloseEnough(student, expected) {
+  const s = (student || '').trim();
+  if (!s) return false;
+  const cs = charSimilarity(s, expected);
+  const ts = tokenSimilarity(s, expected);
+  // forgiving for kids: pass if either is high, or both are decent
+  if (cs >= 0.85) return true;
+  if (ts >= 0.80) return true;
+  if (cs >= 0.78 && ts >= 0.70) return true;
+  return false;
+}
+
+/* --------------------- BADGES --------------------- */
+const BADGES = {
+  bronze:   { name: 'Bronze Coach', icon: '🥉', desc: 'Complete every unit on Level 1.' },
+  silver:   { name: 'Silver Coach', icon: '🥈', desc: 'Complete every unit on Level 2.' },
+  gold:     { name: 'Gold Coach',   icon: '🥇', desc: 'Complete every unit on Level 3.' },
+  star:     { name: 'Perfect Round',icon: '⭐', desc: 'Get all 9 right on your first try.' },
+  streak5:  { name: 'On Fire',      icon: '🔥', desc: 'Pass 5 units in a row.' },
+  master:   { name: 'EALD Master',  icon: '💎', desc: 'Complete every unit on every level.' }
+};
+
+function awardBadge(id) {
+  if (!state.badges.includes(id)) {
+    state.badges.push(id);
+    saveState();
+    toast(`${BADGES[id].icon} New badge: ${BADGES[id].name}!`);
+    return true;
+  }
+  return false;
+}
+function checkLevelBadges() {
+  for (const lvl of [1, 2, 3]) {
+    const all = UNITS.every(u => state.completed[`${u.id}_L${lvl}`]);
+    if (all) {
+      if (lvl === 1) awardBadge('bronze');
+      if (lvl === 2) awardBadge('silver');
+      if (lvl === 3) awardBadge('gold');
+    }
+  }
+  const allLevels = UNITS.every(u => state.completed[`${u.id}_L1`] && state.completed[`${u.id}_L2`] && state.completed[`${u.id}_L3`]);
+  if (allLevels) awardBadge('master');
+  if (state.streak >= 5) awardBadge('streak5');
+}
+
+/* --------------------- TOAST / MODAL --------------------- */
+let toastTimer;
+function toast(text, emoji = '⭐') {
+  const t = $('#toast');
+  $('#toastText').textContent = text;
+  t.querySelector('.em').textContent = emoji;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+function openModal(htmlContent, onClose) {
+  const back = $('#modalBack');
+  const modal = $('#modal');
+  modal.innerHTML = '';
+  if (typeof htmlContent === 'string') modal.innerHTML = htmlContent;
+  else modal.appendChild(htmlContent);
+  back.classList.add('show');
+  back.onclick = (e) => {
+    if (e.target === back) closeModal(onClose);
+  };
+}
+function closeModal(cb) {
+  $('#modalBack').classList.remove('show');
+  if (cb) cb();
+}
+
+/* --------------------- CONFETTI --------------------- */
+function confetti(durationMs = 2200, count = 80) {
+  const wrap = $('#confetti');
+  const colors = ['#21e6c1', '#5cb8ff', '#ff77b7', '#ffd166', '#ffb86b', '#6be3ff', '#4ade80'];
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement('i');
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (1.6 + Math.random() * 1.5) + 's';
+    piece.style.animationDelay = (Math.random() * 0.3) + 's';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    wrap.appendChild(piece);
+    setTimeout(() => piece.remove(), durationMs + 500);
+  }
+}
+
+/* --------------------- VIEWS --------------------- */
+function render() {
+  const app = $('#app');
+  app.innerHTML = '';
+  if (!state.name) return renderName(app);
+  return renderHome(app);
+}
+
+function topbar() {
+  return el('header', { class: 'topbar' },
+    el('div', { class: 'brand' },
+      el('div', { class: 'logo' }, 'E'),
+      el('div', {}, 'EALD ', el('span', { style: { color: 'var(--accent)' } }, 'Coach'))
+    ),
+    el('div', { class: 'spacer' }),
+    el('div', { class: 'row-wrap' },
+      el('span', { class: 'chip' }, '👤 ', el('span', { class: 'name' }, state.name || 'Player')),
+      el('span', { class: 'chip' }, 'XP ', el('span', { class: 'pts' }, String(state.points))),
+      el('span', { class: 'chip' }, 'Lv ', el('span', { class: 'lvl' }, String(state.selectedLevel))),
+      el('button', { class: 'btn ghost', onclick: openProfile }, '🏆')
+    )
+  );
+}
+
+function renderName(app) {
+  app.appendChild(topbar());
+  const wrap = el('div', { class: 'center-screen' });
+  const card = el('div', { class: 'panel name-card' });
+  card.appendChild(el('div', { style: { fontSize: '52px' } }, '👋'));
+  card.appendChild(el('h2', {}, 'Welcome to EALD Coach'));
+  card.appendChild(el('p', {}, 'Translate Mandarin sentences into English. Earn XP, unlock badges, and level up your English!'));
+  const input = el('input', { type: 'text', placeholder: 'Type your name here…', maxlength: 24 });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') startWithName(input.value);
+  });
+  card.appendChild(input);
+  card.appendChild(el('div', { style: { height: '12px' } }));
+  card.appendChild(el('button', { class: 'btn primary lg', onclick: () => startWithName(input.value) }, 'Start →'));
+  wrap.appendChild(card);
+  app.appendChild(wrap);
+  setTimeout(() => input.focus(), 100);
+}
+
+function startWithName(name) {
+  const n = (name || '').trim();
+  if (!n) { toast('Please type your name first', '✏️'); return; }
+  state.name = n;
+  saveState();
+  render();
+}
+
+function renderHome(app) {
+  app.appendChild(topbar());
+
+  // Hero
+  const hero = el('section', { class: 'hero' });
+  const heroLeft = el('div', { class: 'panel' });
+  heroLeft.appendChild(el('h1', {}, `Hey ${state.name}! Ready to coach your English?`));
+  heroLeft.appendChild(el('p', {}, 'Pick a level, then choose a topic. You will translate 9 Mandarin sentences (3 narrative, 3 persuasive, 3 informative). Get most of them close enough and you pass!'));
+
+  const lvlRow = el('div', { class: 'level-row' });
+  const lvls = [
+    { n: 1, t: 'Starter',   sub: 'Short, simple sentences' },
+    { n: 2, t: 'Builder',   sub: 'Longer with more detail' },
+    { n: 3, t: 'Champion',  sub: 'Complex grammar & vocab' }
+  ];
+  for (const L of lvls) {
+    const card = el('button', {
+      class: 'level-card' + (state.selectedLevel === L.n ? ' active' : ''),
+      onclick: () => { state.selectedLevel = L.n; saveState(); render(); }
+    },
+      el('div', { class: 'l-num', style: { color: L.n === 1 ? 'var(--accent)' : L.n === 2 ? 'var(--accent-2)' : 'var(--gold)' } }, 'L' + L.n),
+      el('div', { class: 'l-title' }, L.t),
+      el('div', { class: 'l-sub' }, L.sub)
+    );
+    lvlRow.appendChild(card);
+  }
+  heroLeft.appendChild(lvlRow);
+
+  const heroRight = el('div', { class: 'panel' });
+  heroRight.appendChild(el('div', { class: 'section-title' }, 'Your Progress'));
+  const stats = el('div', { class: 'stat-row' });
+  const totalUnits = UNITS.length * 3;
+  const doneCount = Object.keys(state.completed).length;
+  stats.appendChild(stat('XP', state.points));
+  stats.appendChild(stat('Badges', state.badges.length));
+  stats.appendChild(stat('Units done', `${doneCount} / ${totalUnits}`));
+  stats.appendChild(stat('Streak', state.streak + ' 🔥'));
+  heroRight.appendChild(stats);
+
+  const badgeRow = el('div', { class: 'badges-row', style: { justifyContent: 'flex-start', marginTop: '14px' } });
+  if (state.badges.length === 0) {
+    badgeRow.appendChild(el('div', { style: { color: 'var(--muted)', fontSize: '13px' } }, 'No badges yet — finish a unit to earn your first one!'));
+  } else {
+    for (const id of state.badges) {
+      const b = BADGES[id];
+      const cls = id === 'bronze' || id === 'silver' || id === 'gold' || id === 'star' || id === 'master' ? id : '';
+      badgeRow.appendChild(el('div', { class: 'badge ' + cls, title: b.name + ' — ' + b.desc }, b.icon));
+    }
+  }
+  heroRight.appendChild(badgeRow);
+
+  hero.appendChild(heroLeft);
+  hero.appendChild(heroRight);
+  app.appendChild(hero);
+
+  // Units
+  app.appendChild(el('div', { class: 'section-title' }, 'Topics — Level ' + state.selectedLevel));
+  const grid = el('section', { class: 'units' });
+  for (const u of UNITS) {
+    const c1 = !!state.completed[`${u.id}_L1`];
+    const c2 = !!state.completed[`${u.id}_L2`];
+    const c3 = !!state.completed[`${u.id}_L3`];
+    const doneThisLevel = !!state.completed[`${u.id}_L${state.selectedLevel}`];
+
+    const card = el('button', {
+      class: 'unit' + (doneThisLevel ? ' done' : ''),
+      onclick: () => startQuiz(u.id)
+    },
+      el('div', { class: 'corner' }, doneThisLevel ? 'PASSED' : ''),
+      el('div', { class: 'emoji' }, u.emoji),
+      el('div', { class: 'uname' }, u.name),
+      el('div', { class: 'stars' },
+        el('span', { class: c1 ? 'on' : '' }, '★'),
+        el('span', { class: c2 ? 'on' : '' }, '★'),
+        el('span', { class: c3 ? 'on' : '' }, '★')
+      ),
+      (() => {
+        const pb = el('div', { class: 'progress' });
+        const fill = el('div');
+        fill.style.width = doneThisLevel ? '100%' : '0%';
+        pb.appendChild(fill);
+        return pb;
+      })()
+    );
+    grid.appendChild(card);
+  }
+  app.appendChild(grid);
+
+  app.appendChild(el('div', { class: 'footer-note' },
+    'Tip: small spelling slips are okay — get the meaning close and you will pass. ',
+    el('span', { style: { opacity: 0.6 } }, APP_VERSION)));
+}
+
+function stat(k, v) {
+  return el('div', { class: 'stat' },
+    el('div', { class: 'k' }, k),
+    el('div', { class: 'v' }, String(v))
+  );
+}
+
+/* --------------------- QUIZ --------------------- */
+let quiz = null;
+
+function startQuiz(unitId) {
+  const u = UNITS.find(x => x.id === unitId);
+  const lvl = state.selectedLevel;
+  const data = u.levels[lvl];
+
+  const items = [];
+  ['narrative', 'persuasive', 'informative'].forEach(t => {
+    data[t].forEach(s => items.push({ type: t, zh: s.zh, en: s.en, answer: '', checked: false, correct: false }));
+  });
+
+  quiz = {
+    unit: u, level: lvl,
+    items,
+    firstCheck: true,
+    attempts: 0,
+    correctOnFirstTry: 0,
+    revealedAll: false
+  };
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const app = $('#app');
+  app.innerHTML = '';
+  app.appendChild(topbar());
+
+  const head = el('div', { class: 'panel' });
+  const headTop = el('div', { class: 'quiz-header' },
+    el('button', { class: 'btn ghost', onclick: () => { if (confirm('Leave this topic? Your progress on this round will be lost.')) { quiz = null; render(); } } }, '← Topics'),
+    el('div', { class: 'crumb' }, `Level ${quiz.level} • ${quiz.unit.name}`)
+  );
+  head.appendChild(headTop);
+
+  head.appendChild(el('div', { class: 'quiz-title' },
+    el('div', { class: 'e' }, quiz.unit.emoji),
+    el('h2', {}, `${quiz.unit.name} — Translate to English`),
+  ));
+  head.appendChild(el('div', { style: { color: 'var(--muted)', fontSize: '14px', marginTop: '6px' } },
+    'Read each Mandarin sentence and type the English translation. There are 9 sentences: 3 narrative 📖, 3 persuasive 💬, 3 informative 📊. When you have done them all, hit Check Answers.'));
+
+  const pb = el('div', { class: 'progress-bar' });
+  const fill = el('div'); fill.style.width = '0%'; pb.appendChild(fill);
+  head.appendChild(pb);
+  app.appendChild(head);
+
+  const list = el('div', { class: 'sentences' });
+  quiz.items.forEach((it, i) => {
+    const cardCls = 'qcard' + (it.checked ? (it.correct ? ' correct' : ' wrong') : '') + (it.checked && it.correct ? ' locked' : '');
+    const card = el('div', { class: cardCls, id: 'q' + i });
+    const tagCls = it.type === 'narrative' ? 'narr' : it.type === 'persuasive' ? 'pers' : 'info';
+    const tagText = it.type === 'narrative' ? 'Narrative 📖' : it.type === 'persuasive' ? 'Persuasive 💬' : 'Informative 📊';
+    card.appendChild(el('div', { class: 'qhead' },
+      el('span', { class: 'qnum' }, `#${i + 1}`),
+      el('span', { class: 'tag ' + tagCls }, tagText)
+    ));
+    card.appendChild(el('div', { class: 'zh' }, it.zh));
+    const input = el('input', {
+      type: 'text', placeholder: 'Type the English translation…',
+      value: it.answer || '',
+      autocomplete: 'off', autocorrect: 'on', spellcheck: 'true'
+    });
+    input.disabled = it.checked && it.correct;
+    input.addEventListener('input', () => { it.answer = input.value; updateProgress(); });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const next = $('#q' + (i + 1) + ' input');
+        if (next) next.focus();
+      }
+    });
+    card.appendChild(input);
+
+    const fb = el('div', { class: 'feedback' });
+    if (it.checked) {
+      if (it.correct) {
+        fb.appendChild(el('div', {}, el('span', { class: 'ok' }, '✓ Great translation!')));
+      } else {
+        const showSample = quiz.revealedAll || quiz.attempts >= 2;
+        const msg = showSample
+          ? '✗ Not quite — use the sample below to fix yours, then re-check.'
+          : '✗ Not quite right — have another go and re-check.';
+        fb.appendChild(el('div', {}, el('span', { class: 'no' }, msg)));
+        if (showSample) {
+          fb.appendChild(el('div', { class: 'expect' }, 'Sample answer: ', el('b', {}, it.en)));
+        }
+      }
+    }
+    card.appendChild(fb);
+    list.appendChild(card);
+  });
+  app.appendChild(list);
+
+  // Actions
+  const allChecked = quiz.items.every(x => x.checked);
+  const allCorrect = quiz.items.every(x => x.correct);
+  const wrongCount = quiz.items.filter(x => x.checked && !x.correct).length;
+
+  const actions = el('div', { class: 'quiz-actions' });
+  let infoText;
+  if (!allChecked) infoText = `Fill all 9 then press Check Answers.`;
+  else if (allCorrect) infoText = `🎉 Nice — all 9 close enough! Tap Next Topic.`;
+  else if (quiz.attempts >= 2) infoText = `${wrongCount} to fix. Sample answers shown — match the meaning and re-check.`;
+  else infoText = `${wrongCount} to fix. Tweak them and re-check (samples appear after the next try).`;
+  actions.appendChild(el('div', { class: 'info' }, infoText));
+
+  const btnRow = el('div', { class: 'row-wrap' });
+  if (allCorrect && allChecked) {
+    btnRow.appendChild(el('button', { class: 'btn warn', onclick: () => { quiz = null; render(); } }, 'Back to Topics'));
+    btnRow.appendChild(el('button', { class: 'btn primary lg', onclick: nextTopic }, 'Next Topic →'));
+  } else {
+    if (quiz.attempts < 2) {
+      btnRow.appendChild(el('button', {
+        class: 'btn',
+        onclick: () => {
+          if (!quiz.items.every(x => (x.answer || '').trim().length > 0)) {
+            toast('Fill in every sentence first', '✏️');
+            return;
+          }
+          if (confirm('Reveal all sample answers now? You can still fix yours and re-check.')) {
+            quiz.revealedAll = true;
+            quiz.items.forEach(x => { if (!x.checked) { x.checked = true; x.correct = isCloseEnough(x.answer, x.en); } });
+            renderQuiz();
+          }
+        }
+      }, 'Reveal Answers'));
+    }
+
+    btnRow.appendChild(el('button', { class: 'btn primary lg', onclick: checkAnswers }, allChecked ? 'Re-check ✓' : 'Check Answers ✓'));
+  }
+  actions.appendChild(btnRow);
+  app.appendChild(actions);
+
+  updateProgress();
+}
+
+function updateProgress() {
+  if (!quiz) return;
+  const filled = quiz.items.filter(x => (x.answer || '').trim().length > 0).length;
+  const fill = $('.progress-bar > div');
+  if (fill) fill.style.width = (filled / 9 * 100) + '%';
+}
+
+function checkAnswers() {
+  // Require all to be filled
+  if (!quiz.items.every(x => (x.answer || '').trim().length > 0)) {
+    toast('Fill in every sentence first', '✏️');
+    return;
+  }
+  quiz.attempts++;
+  let newlyCorrect = 0;
+  quiz.items.forEach(it => {
+    if (it.checked && it.correct) return; // locked correct stays
+    const wasChecked = it.checked;
+    it.checked = true;
+    it.correct = isCloseEnough(it.answer, it.en);
+    if (it.correct && !wasChecked && quiz.attempts === 1) {
+      newlyCorrect++;
+    }
+  });
+
+  if (quiz.attempts === 1) {
+    quiz.correctOnFirstTry = quiz.items.filter(x => x.correct).length;
+  }
+
+  const allCorrect = quiz.items.every(x => x.correct);
+  if (allCorrect) {
+    finishUnit();
+    return;
+  }
+
+  // partial — re-render and toast
+  const right = quiz.items.filter(x => x.correct).length;
+  toast(`${right}/9 close enough. Keep fixing!`, '💪');
+  renderQuiz();
+  // Scroll to first wrong
+  const firstWrong = quiz.items.findIndex(x => !x.correct);
+  if (firstWrong >= 0) {
+    setTimeout(() => {
+      const node = document.getElementById('q' + firstWrong);
+      if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const inp = node && node.querySelector('input');
+      if (inp) inp.focus();
+      if (node) node.classList.add('shake');
+      setTimeout(() => node && node.classList.remove('shake'), 300);
+    }, 50);
+  }
+}
+
+function finishUnit() {
+  const u = quiz.unit;
+  const lvl = quiz.level;
+  const key = `${u.id}_L${lvl}`;
+  const firstTime = !state.completed[key];
+
+  // Points: base 10/sentence × level multiplier, bonus for perfect first try
+  const mult = lvl === 1 ? 1 : lvl === 2 ? 1.5 : 2;
+  let earned = Math.round(9 * 10 * mult);
+  const perfect = quiz.attempts === 1 && quiz.items.every(x => x.correct);
+  if (perfect) earned += Math.round(100 * mult);
+  if (firstTime) earned += Math.round(50 * mult);
+
+  state.points += earned;
+  state.completed[key] = { firstTry: perfect, attempts: quiz.attempts, score: earned };
+  state.streak = (state.lastSession === todayStr() || !state.lastSession) ? state.streak + 1 : 1;
+  state.lastSession = todayStr();
+  if (perfect) awardBadge('star');
+  saveState();
+  checkLevelBadges();
+
+  confetti();
+  // Modal
+  const m = el('div');
+  m.appendChild(el('div', { style: { fontSize: '52px' } }, perfect ? '🏆' : '🎉'));
+  m.appendChild(el('h2', {}, perfect ? 'Perfect Round!' : 'Topic Passed!'));
+  m.appendChild(el('p', {}, perfect ? `${state.name}, you got all 9 right on your first try. Amazing!` : `Great work, ${state.name}! You finished ${u.name} on Level ${lvl}.`));
+  const row = el('div', { class: 'stat-row' });
+  row.appendChild(stat('XP earned', '+' + earned));
+  row.appendChild(stat('Attempts', quiz.attempts));
+  row.appendChild(stat('Streak', state.streak + ' 🔥'));
+  m.appendChild(row);
+
+  const btns = el('div', { class: 'row-wrap', style: { justifyContent: 'center', marginTop: '16px' } });
+  // Find next topic at this level not yet completed
+  const idx = UNITS.findIndex(x => x.id === u.id);
+  let nextUnit = null;
+  for (let i = 1; i <= UNITS.length; i++) {
+    const cand = UNITS[(idx + i) % UNITS.length];
+    if (!state.completed[`${cand.id}_L${lvl}`]) { nextUnit = cand; break; }
+  }
+  if (nextUnit) {
+    btns.appendChild(el('button', { class: 'btn primary lg', onclick: () => { closeModal(); startQuiz(nextUnit.id); } }, `Next: ${nextUnit.emoji} ${nextUnit.name} →`));
+  } else {
+    btns.appendChild(el('button', { class: 'btn primary lg', onclick: () => { closeModal(); render(); } }, 'Back to Topics'));
+  }
+  btns.appendChild(el('button', { class: 'btn ghost', onclick: () => { closeModal(); quiz = null; render(); } }, 'Home'));
+  m.appendChild(btns);
+  openModal(m);
+}
+
+function nextTopic() {
+  // Triggered from the "all correct" state; same logic as finish modal but without modal
+  const u = quiz.unit;
+  const lvl = quiz.level;
+  const idx = UNITS.findIndex(x => x.id === u.id);
+  let nextUnit = null;
+  for (let i = 1; i <= UNITS.length; i++) {
+    const cand = UNITS[(idx + i) % UNITS.length];
+    if (!state.completed[`${cand.id}_L${lvl}`]) { nextUnit = cand; break; }
+  }
+  if (nextUnit) startQuiz(nextUnit.id);
+  else { quiz = null; render(); }
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+/* --------------------- PROFILE / SETTINGS --------------------- */
+function openProfile() {
+  const m = el('div');
+  m.appendChild(el('div', { style: { fontSize: '40px' } }, '🏆'));
+  m.appendChild(el('h2', {}, `${state.name}'s Trophy Cabinet`));
+  m.appendChild(el('p', {}, `${state.points} XP · ${Object.keys(state.completed).length} units passed · streak ${state.streak} 🔥`));
+
+  const all = Object.keys(BADGES);
+  const row = el('div', { class: 'badges-row' });
+  for (const id of all) {
+    const has = state.badges.includes(id);
+    const b = BADGES[id];
+    const cls = has ? id : '';
+    const node = el('div', {
+      class: 'badge ' + cls, title: b.name + ' — ' + b.desc,
+      style: { opacity: has ? 1 : 0.35, filter: has ? 'none' : 'grayscale(0.6)' }
+    }, b.icon);
+    row.appendChild(node);
+  }
+  m.appendChild(row);
+
+  m.appendChild(el('div', { class: 'section-title', style: { marginTop: '14px' } }, 'Badges'));
+  const list = el('div', { style: { textAlign: 'left' } });
+  for (const id of all) {
+    const has = state.badges.includes(id);
+    const b = BADGES[id];
+    const row2 = el('div', { style: { display: 'flex', gap: '10px', alignItems: 'center', padding: '6px 0', opacity: has ? 1 : 0.6 } });
+    row2.appendChild(el('div', { style: { fontSize: '20px', width: '24px' } }, has ? '✅' : '🔒'));
+    row2.appendChild(el('div', {},
+      el('div', { style: { fontWeight: 700 } }, b.icon + ' ' + b.name),
+      el('div', { style: { color: 'var(--muted)', fontSize: '12px' } }, b.desc)
+    ));
+    list.appendChild(row2);
+  }
+  m.appendChild(list);
+
+  const btns = el('div', { class: 'row-wrap', style: { justifyContent: 'center', marginTop: '16px' } });
+  btns.appendChild(el('button', { class: 'btn', onclick: () => closeModal() }, 'Close'));
+  btns.appendChild(el('button', {
+    class: 'btn danger',
+    onclick: () => {
+      if (confirm('Sign out and clear all progress on this device?')) {
+        localStorage.removeItem(STORE_KEY);
+        state = defaultState();
+        closeModal();
+        render();
+      }
+    }
+  }, 'Sign out & reset'));
+  m.appendChild(btns);
+  openModal(m);
+}
+
+/* --------------------- BOOT --------------------- */
+render();
+</script>
+</body>
+</html>
