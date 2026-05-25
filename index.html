@@ -444,6 +444,89 @@
   .crit .lbl { font-weight: 700; }
   .crit .det { color: var(--muted); font-size: 12px; margin-top: 2px; }
 
+  /* Progress overview */
+  .progress-hero {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;
+  }
+  .ph-stat {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; min-height: 84px;
+  }
+  .ph-stat .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .ph-stat .v { font-size: 28px; font-weight: 900; margin-top: 4px; line-height: 1; }
+  .ph-stat .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .ph-stat.accent .v { color: var(--accent); }
+  .ph-stat.warn .v { color: var(--gold); }
+  .ph-stat.pink .v { color: var(--pers); }
+
+  .matrix {
+    display: grid; gap: 4px;
+    grid-template-columns: 110px repeat(3, 1fr);
+    margin-top: 8px;
+  }
+  .matrix .h {
+    color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px;
+    padding: 6px 4px; text-align: center;
+  }
+  .matrix .h.first { text-align: left; }
+  .matrix .row-label {
+    display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;
+    padding: 4px;
+  }
+  .matrix .row-label .em { font-size: 18px; line-height: 1; }
+  .matrix .cell {
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    display: grid; place-items: center;
+    font-size: 14px; min-height: 36px; color: var(--muted);
+  }
+  .matrix .cell.done {
+    background: linear-gradient(135deg, rgba(33,230,193,0.20), rgba(92,184,255,0.10));
+    border-color: rgba(33,230,193,0.45); color: #fff; font-weight: 800;
+  }
+  .matrix .cell.perfect {
+    background: linear-gradient(135deg, rgba(255,209,102,0.30), rgba(255,184,107,0.20));
+    border-color: rgba(255,209,102,0.55); color: #fff; font-weight: 800;
+    box-shadow: 0 0 12px rgba(255,209,102,0.25);
+  }
+
+  .progress-grid {
+    display: grid; gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    margin-top: 14px;
+  }
+  .mode-card {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 16px; padding: 14px;
+  }
+  .mode-card h3 {
+    margin: 0 0 6px; font-size: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .mode-card .meter {
+    height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; margin: 6px 0 8px;
+  }
+  .mode-card .meter > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s ease; }
+
+  .history-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .hist-row {
+    display: flex; gap: 10px; align-items: center; padding: 8px 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px;
+    font-size: 13px;
+  }
+  .hist-row .em { font-size: 20px; }
+  .hist-row .grow { flex: 1; }
+  .hist-row .mut { color: var(--muted); font-size: 12px; }
+  .hist-row .xp { color: var(--gold); font-weight: 800; }
+  .hist-row .star { color: var(--gold); }
+
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: 12px; margin-top: 8px; }
+  .legend .swatch {
+    width: 16px; height: 16px; border-radius: 4px; display: inline-block; margin-right: 4px; vertical-align: -3px;
+    border: 1px solid var(--border);
+  }
+  .legend .swatch.done { background: linear-gradient(135deg, rgba(33,230,193,0.40), rgba(92,184,255,0.25)); border-color: rgba(33,230,193,0.55); }
+  .legend .swatch.perfect { background: linear-gradient(135deg, rgba(255,209,102,0.50), rgba(255,184,107,0.35)); border-color: rgba(255,209,102,0.6); }
+
   /* small screens */
   @media (max-width: 520px) {
     .topbar { padding: 8px 10px; }
@@ -470,7 +553,7 @@
    Single-file translation practice for EALD students (~Yr 7).
    Mandarin -> English, 10 units, 3 levels, 9 sentences per run.
    ============================================================ */
-const APP_VERSION = 'v1.4 (+ Story Studio free-write module)';
+const APP_VERSION = 'v1.5 (+ Progress overview & export)';
 
 /* ------------------------- CONTENT ------------------------- */
 const UNITS = [
@@ -1127,14 +1210,21 @@ function defaultState() {
     name: '',
     points: 0,
     selectedLevel: 1,
-    mode: 'translate',      // 'translate' | 'scramble'
-    completed: {},          // key: `${unitId}_L${level}[_SCR]` -> { firstTry, attempts, score, mode }
+    mode: 'translate',      // 'translate' | 'scramble' | 'story'
+    completed: {},          // key: `${unitId}_L${level}[_SCR|_STORY]` -> { firstTry, attempts, score, mode }
     badges: [],             // strings
     streak: 0,
-    lastSession: null
+    lastSession: null,
+    history: []             // [{ ts, unit, unitName, level, mode, perfect, xp }] newest first
   };
 }
+function pushHistory(entry) {
+  if (!Array.isArray(state.history)) state.history = [];
+  state.history.unshift(Object.assign({ ts: Date.now() }, entry));
+  if (state.history.length > 50) state.history.length = 50;
+}
 let state = loadState();
+if (!Array.isArray(state.history)) state.history = [];
 
 /* --------------------- HELPERS --------------------- */
 function $(sel, root = document) { return root.querySelector(sel); }
@@ -1357,7 +1447,8 @@ function topbar() {
       el('span', { class: 'chip' }, '👤 ', el('span', { class: 'name' }, state.name || 'Player')),
       el('span', { class: 'chip' }, 'XP ', el('span', { class: 'pts' }, String(state.points))),
       el('span', { class: 'chip' }, 'Lv ', el('span', { class: 'lvl' }, String(state.selectedLevel))),
-      el('button', { class: 'btn ghost', onclick: openProfile }, '🏆')
+      el('button', { class: 'btn ghost', title: 'Progress report', onclick: () => renderProgress() }, '📊'),
+      el('button', { class: 'btn ghost', title: 'Trophy cabinet', onclick: openProfile }, '🏆')
     )
   );
 }
@@ -1731,6 +1822,7 @@ function finishUnit() {
   state.streak = (state.lastSession === todayStr() || !state.lastSession) ? state.streak + 1 : 1;
   state.lastSession = todayStr();
   if (perfect) awardBadge('star');
+  pushHistory({ unit: u.id, unitName: u.name, level: lvl, mode: 'translate', perfect, xp: earned });
   saveState();
   checkLevelBadges();
 
@@ -2026,6 +2118,7 @@ function finishScrambleUnit() {
   state.streak = (state.lastSession === todayStr() || !state.lastSession) ? state.streak + 1 : 1;
   state.lastSession = todayStr();
   if (perfect) { awardBadge('star'); awardBadge('wizard'); }
+  pushHistory({ unit: u.id, unitName: u.name, level: lvl, mode: 'scramble', perfect, xp: earned });
   saveState();
   checkLevelBadges();
 
@@ -2367,6 +2460,7 @@ function finishStoryUnit() {
   state.streak = (state.lastSession === todayStr() || !state.lastSession) ? state.streak + 1 : 1;
   state.lastSession = todayStr();
   if (story.firstTryAllPass) { awardBadge('star'); awardBadge('wordsmith'); }
+  pushHistory({ unit: u.id, unitName: u.name, level: lvl, mode: 'story', perfect: story.firstTryAllPass, xp: earned });
   saveState();
   checkLevelBadges();
 
@@ -2402,6 +2496,248 @@ function finishStoryUnit() {
   btns.appendChild(el('button', { class: 'btn ghost', onclick: () => { closeModal(); story = null; render(); } }, 'Home'));
   m.appendChild(btns);
   openModal(m);
+}
+
+/* --------------------- PROGRESS OVERVIEW --------------------- */
+const MODE_META = {
+  translate: { name: 'Translate',     icon: '📝', suffix: ''       },
+  scramble:  { name: 'Scramble',      icon: '🧩', suffix: '_SCR'   },
+  story:     { name: 'Story Studio',  icon: '✍️', suffix: '_STORY' }
+};
+
+function modeCountFor(modeId) {
+  const suffix = MODE_META[modeId].suffix;
+  return Object.keys(state.completed).filter(k => {
+    if (suffix === '') return !k.endsWith('_SCR') && !k.endsWith('_STORY');
+    return k.endsWith(suffix);
+  }).length;
+}
+function perfectCountFor(modeId) {
+  const suffix = MODE_META[modeId].suffix;
+  return Object.keys(state.completed).filter(k => {
+    const isMode = suffix === '' ? (!k.endsWith('_SCR') && !k.endsWith('_STORY')) : k.endsWith(suffix);
+    return isMode && state.completed[k] && state.completed[k].firstTry;
+  }).length;
+}
+function formatDate(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  if (sameDay) {
+    const hh = d.getHours().toString().padStart(2, '0');
+    const mm = d.getMinutes().toString().padStart(2, '0');
+    return `Today ${hh}:${mm}`;
+  }
+  const opts = { day: 'numeric', month: 'short' };
+  return d.toLocaleDateString(undefined, opts);
+}
+
+function renderProgress() {
+  const app = $('#app');
+  app.innerHTML = '';
+  app.appendChild(topbar());
+
+  // Header
+  const head = el('div', { class: 'panel' });
+  head.appendChild(el('div', { class: 'quiz-header' },
+    el('button', { class: 'btn ghost', onclick: () => render() }, '← Home'),
+    el('div', { class: 'crumb' }, '📊 Progress report')
+  ));
+  head.appendChild(el('h1', { style: { margin: '6px 0 4px', fontSize: '28px' } }, `${state.name}'s Progress`));
+  head.appendChild(el('p', { style: { color: 'var(--muted)', margin: '0 0 4px', fontSize: '14px' } },
+    'A snapshot of everything you have cleared so far across all three modes.'));
+
+  // Hero stats
+  const totalPossible = UNITS.length * 3 * 3; // 90 (3 modes * 10 units * 3 levels)
+  const totalDone = Object.keys(state.completed).length;
+  const totalPerfect = Object.values(state.completed).filter(v => v && v.firstTry).length;
+  const heroBox = el('div', { class: 'progress-hero', style: { marginTop: '12px' } });
+  heroBox.appendChild(el('div', { class: 'ph-stat warn' },
+    el('div', { class: 'k' }, 'Total XP'),
+    el('div', { class: 'v' }, String(state.points)),
+    el('div', { class: 'sub' }, `Streak ${state.streak} 🔥`)
+  ));
+  heroBox.appendChild(el('div', { class: 'ph-stat accent' },
+    el('div', { class: 'k' }, 'Units cleared'),
+    el('div', { class: 'v' }, `${totalDone} / ${totalPossible}`),
+    el('div', { class: 'sub' }, `${totalPerfect} cleared first try ⭐`)
+  ));
+  heroBox.appendChild(el('div', { class: 'ph-stat pink' },
+    el('div', { class: 'k' }, 'Badges'),
+    el('div', { class: 'v' }, `${state.badges.length} / ${Object.keys(BADGES).length}`),
+    el('div', { class: 'sub' }, 'Open trophy cabinet to inspect')
+  ));
+  heroBox.appendChild(el('div', { class: 'ph-stat' },
+    el('div', { class: 'k' }, 'Last session'),
+    el('div', { class: 'v', style: { fontSize: '18px' } }, state.lastSession || '—'),
+    el('div', { class: 'sub' }, `${(state.history || []).length} recent activity entries`)
+  ));
+  head.appendChild(heroBox);
+
+  // Legend
+  head.appendChild(el('div', { class: 'legend' },
+    el('span', {}, el('span', { class: 'swatch done' }), 'Cleared'),
+    el('span', {}, el('span', { class: 'swatch perfect' }), 'Cleared first try (perfect)'),
+    el('span', { style: { marginLeft: 'auto' } }, 'Rows are units · columns are levels')
+  ));
+  app.appendChild(head);
+
+  // Per-mode matrices
+  const grid = el('div', { class: 'progress-grid' });
+  for (const modeId of ['translate', 'scramble', 'story']) {
+    const meta = MODE_META[modeId];
+    const card = el('div', { class: 'mode-card' });
+    const done = modeCountFor(modeId);
+    const perf = perfectCountFor(modeId);
+    const total = UNITS.length * 3;
+    card.appendChild(el('h3', {}, meta.icon, ' ', meta.name));
+    card.appendChild(el('div', { style: { color: 'var(--muted)', fontSize: '13px' } },
+      `${done} / ${total} cleared · ${perf} perfect ⭐`));
+    const meter = el('div', { class: 'meter' });
+    const meterFill = el('div'); meterFill.style.width = (done / total * 100) + '%';
+    meter.appendChild(meterFill);
+    card.appendChild(meter);
+
+    const matrix = el('div', { class: 'matrix' });
+    matrix.appendChild(el('div', { class: 'h first' }, 'Topic'));
+    matrix.appendChild(el('div', { class: 'h' }, 'L1'));
+    matrix.appendChild(el('div', { class: 'h' }, 'L2'));
+    matrix.appendChild(el('div', { class: 'h' }, 'L3'));
+    for (const u of UNITS) {
+      matrix.appendChild(el('div', { class: 'row-label' },
+        el('span', { class: 'em' }, u.emoji),
+        el('span', {}, u.name)
+      ));
+      for (const lvl of [1, 2, 3]) {
+        const k = `${u.id}_L${lvl}${meta.suffix}`;
+        const c = state.completed[k];
+        let cls = 'cell', content = '';
+        if (c) {
+          if (c.firstTry) { cls += ' perfect'; content = '⭐'; }
+          else { cls += ' done'; content = '✓'; }
+        }
+        const cell = el('div', { class: cls, title: c ? `Cleared · +${c.score || 0} XP${c.firstTry ? ' · perfect' : ''}` : 'Not yet' }, content);
+        matrix.appendChild(cell);
+      }
+    }
+    card.appendChild(matrix);
+    grid.appendChild(card);
+  }
+  app.appendChild(grid);
+
+  // Recent activity
+  const recent = el('div', { class: 'panel', style: { marginTop: '16px' } });
+  recent.appendChild(el('div', { class: 'section-title', style: { margin: '0 0 6px' } }, 'Recent activity'));
+  const hist = (state.history || []).slice(0, 20);
+  if (!hist.length) {
+    recent.appendChild(el('div', { style: { color: 'var(--muted)', fontSize: '13px' } },
+      'Nothing yet — clear a unit and it will appear here.'));
+  } else {
+    const list = el('div', { class: 'history-list' });
+    hist.forEach(h => {
+      const meta = MODE_META[h.mode] || { name: h.mode, icon: '•' };
+      list.appendChild(el('div', { class: 'hist-row' },
+        el('span', { class: 'em' }, meta.icon),
+        el('div', { class: 'grow' },
+          el('div', {}, `${meta.name} · ${h.unitName || h.unit} · L${h.level}`, h.perfect ? el('span', { class: 'star' }, ' ⭐') : null),
+          el('div', { class: 'mut' }, formatDate(h.ts))
+        ),
+        el('span', { class: 'xp' }, '+' + (h.xp || 0))
+      ));
+    });
+    recent.appendChild(list);
+  }
+  app.appendChild(recent);
+
+  // Actions
+  const actions = el('div', { class: 'panel', style: { marginTop: '16px' } });
+  actions.appendChild(el('div', { class: 'section-title', style: { margin: '0 0 6px' } }, 'Share / Export'));
+  actions.appendChild(el('p', { style: { color: 'var(--muted)', fontSize: '13px', margin: '0 0 10px' } },
+    'Copy or download a plain-text summary you can paste into a chat with your teacher or parents.'));
+  const btns = el('div', { class: 'row-wrap' });
+  btns.appendChild(el('button', { class: 'btn primary', onclick: copyProgressSummary }, '📋 Copy summary'));
+  btns.appendChild(el('button', { class: 'btn', onclick: downloadProgressSummary }, '⬇ Download .txt'));
+  btns.appendChild(el('button', { class: 'btn', onclick: () => window.print() }, '🖨 Print'));
+  actions.appendChild(btns);
+  app.appendChild(actions);
+}
+
+function buildProgressSummary() {
+  const lines = [];
+  lines.push(`EALD Coach — Progress Report`);
+  lines.push(`Player: ${state.name}`);
+  lines.push(`Generated: ${new Date().toLocaleString()}`);
+  lines.push('');
+  lines.push(`Total XP: ${state.points}`);
+  lines.push(`Streak: ${state.streak}`);
+  lines.push(`Badges: ${state.badges.length} / ${Object.keys(BADGES).length}`);
+  if (state.badges.length) {
+    lines.push('  ' + state.badges.map(id => `${BADGES[id].icon} ${BADGES[id].name}`).join(', '));
+  }
+  lines.push('');
+  for (const modeId of ['translate', 'scramble', 'story']) {
+    const meta = MODE_META[modeId];
+    const done = modeCountFor(modeId);
+    const perf = perfectCountFor(modeId);
+    lines.push(`${meta.icon} ${meta.name}: ${done}/30 cleared (${perf} perfect)`);
+    for (const u of UNITS) {
+      const cells = [1, 2, 3].map(lvl => {
+        const c = state.completed[`${u.id}_L${lvl}${meta.suffix}`];
+        if (!c) return '·';
+        return c.firstTry ? '★' : '✓';
+      });
+      lines.push(`   ${u.emoji} ${u.name.padEnd(14, ' ')}  L1:${cells[0]}  L2:${cells[1]}  L3:${cells[2]}`);
+    }
+    lines.push('');
+  }
+  const hist = (state.history || []).slice(0, 10);
+  if (hist.length) {
+    lines.push('Recent activity:');
+    hist.forEach(h => {
+      const meta = MODE_META[h.mode] || { name: h.mode };
+      lines.push(`  - ${formatDate(h.ts)}  ${meta.name}  ${h.unitName || h.unit}  L${h.level}  +${h.xp || 0} XP${h.perfect ? '  ★' : ''}`);
+    });
+  }
+  lines.push('');
+  lines.push('Legend: ★ cleared first try (perfect) · ✓ cleared · · not yet');
+  return lines.join('\n');
+}
+
+function copyProgressSummary() {
+  const text = buildProgressSummary();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => toast('Summary copied to clipboard!', '📋'),
+      () => fallbackCopy(text)
+    );
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); toast('Summary copied!', '📋'); }
+  catch (e) { toast('Copy not supported here — use Download', 'ℹ️'); }
+  document.body.removeChild(ta);
+}
+function downloadProgressSummary() {
+  const text = buildProgressSummary();
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const safeName = (state.name || 'player').replace(/[^a-z0-9_\-]+/gi, '_');
+  a.download = `eald-progress-${safeName}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Downloaded progress summary', '⬇');
 }
 
 /* --------------------- PROFILE / SETTINGS --------------------- */
