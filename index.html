@@ -332,6 +332,80 @@
   @keyframes glow { 0%,100% { box-shadow: 0 0 0 rgba(74,222,128,0); } 50% { box-shadow: 0 0 24px rgba(74,222,128,0.35); } }
   .glow { animation: glow 1s ease 1; }
 
+  /* Mode tabs */
+  .mode-tabs {
+    display: inline-flex; gap: 4px; padding: 4px; background: var(--panel-2);
+    border: 1px solid var(--border); border-radius: 14px; margin-bottom: 14px;
+  }
+  .mode-tab {
+    border: none; background: transparent; color: var(--muted); padding: 8px 14px;
+    border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .mode-tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #04121d; box-shadow: 0 4px 14px rgba(33,230,193,0.3);
+  }
+  .mode-tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.06); }
+
+  /* Scramble */
+  .scramble-stage { display: flex; flex-direction: column; gap: 12px; }
+  .scramble-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .dots { display: flex; gap: 6px; }
+  .dots .d {
+    width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.12);
+  }
+  .dots .d.done { background: var(--good); box-shadow: 0 0 8px rgba(74,222,128,0.5); }
+  .dots .d.wrong { background: var(--bad); box-shadow: 0 0 8px rgba(255,90,122,0.5); }
+  .dots .d.current { background: var(--accent); box-shadow: 0 0 10px rgba(33,230,193,0.6); }
+
+  .slots {
+    min-height: 70px; padding: 14px; border-radius: 14px;
+    background: rgba(0,0,0,0.22); border: 2px dashed rgba(255,255,255,0.18);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    position: relative;
+  }
+  .slots.empty::after {
+    content: 'Tap the word tiles below to build your sentence…';
+    color: var(--muted); font-size: 14px; font-style: italic;
+  }
+  .slots.correct { border-color: rgba(74,222,128,0.6); background: linear-gradient(160deg, rgba(74,222,128,0.12), transparent 70%); }
+  .slots.wrong { border-color: rgba(255,90,122,0.6); background: linear-gradient(160deg, rgba(255,90,122,0.12), transparent 70%); }
+
+  .bank {
+    padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    min-height: 60px;
+  }
+  .tile {
+    display: inline-flex; align-items: center; padding: 10px 14px; border-radius: 10px;
+    background: linear-gradient(180deg, #2a3170, #1a2050); border: 1px solid rgba(255,255,255,0.18);
+    color: #fff; font-weight: 700; cursor: pointer; font-size: 16px; user-select: none;
+    transition: transform .1s ease, background .15s ease, opacity .15s ease;
+    font-family: inherit;
+  }
+  .tile:hover { transform: translateY(-1px); background: linear-gradient(180deg, #394199, #232c70); }
+  .tile:active { transform: translateY(1px); }
+  .tile.hint { background: linear-gradient(180deg, #b8862a, #8a6018); box-shadow: 0 0 16px rgba(255,209,102,0.5); }
+  .tile.placed-ghost { opacity: 0.25; pointer-events: none; }
+  .tile.in-slot { background: linear-gradient(180deg, #2c8b6f, #186650); }
+  .tile.in-slot:hover { background: linear-gradient(180deg, #36a585, #1f7a60); }
+
+  .scramble-actions {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center;
+    background: rgba(7,9,26,0.7); backdrop-filter: blur(8px); border: 1px solid var(--border);
+    border-radius: 14px; padding: 10px 12px; position: sticky; bottom: 14px;
+  }
+  .scramble-feedback {
+    margin-top: 4px; padding: 10px 12px; border-radius: 10px; font-size: 14px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border); display: none;
+  }
+  .scramble-feedback.show { display: block; }
+  .scramble-feedback .ok { color: var(--good); font-weight: 800; }
+  .scramble-feedback .no { color: var(--bad); font-weight: 800; }
+  .scramble-feedback .expect { color: var(--muted); margin-top: 4px; }
+  .scramble-feedback .expect b { color: #fff; }
+
   /* small screens */
   @media (max-width: 520px) {
     .topbar { padding: 8px 10px; }
@@ -358,7 +432,7 @@
    Single-file translation practice for EALD students (~Yr 7).
    Mandarin -> English, 10 units, 3 levels, 9 sentences per run.
    ============================================================ */
-const APP_VERSION = 'v1.2 (feedback visible + 2-attempt reveal)';
+const APP_VERSION = 'v1.3 (+ Sentence Scramble module)';
 
 /* ------------------------- CONTENT ------------------------- */
 const UNITS = [
@@ -954,7 +1028,8 @@ function defaultState() {
     name: '',
     points: 0,
     selectedLevel: 1,
-    completed: {},          // key: `${unitId}_L${level}` -> { firstTry: bool, attempts: n, score: n }
+    mode: 'translate',      // 'translate' | 'scramble'
+    completed: {},          // key: `${unitId}_L${level}[_SCR]` -> { firstTry, attempts, score, mode }
     badges: [],             // strings
     streak: 0,
     lastSession: null
@@ -1049,13 +1124,21 @@ function isCloseEnough(student, expected) {
 
 /* --------------------- BADGES --------------------- */
 const BADGES = {
-  bronze:   { name: 'Bronze Coach', icon: '🥉', desc: 'Complete every unit on Level 1.' },
-  silver:   { name: 'Silver Coach', icon: '🥈', desc: 'Complete every unit on Level 2.' },
-  gold:     { name: 'Gold Coach',   icon: '🥇', desc: 'Complete every unit on Level 3.' },
-  star:     { name: 'Perfect Round',icon: '⭐', desc: 'Get all 9 right on your first try.' },
-  streak5:  { name: 'On Fire',      icon: '🔥', desc: 'Pass 5 units in a row.' },
-  master:   { name: 'EALD Master',  icon: '💎', desc: 'Complete every unit on every level.' }
+  bronze:   { name: 'Bronze Coach',     icon: '🥉', desc: 'Translate: complete every unit on Level 1.' },
+  silver:   { name: 'Silver Coach',     icon: '🥈', desc: 'Translate: complete every unit on Level 2.' },
+  gold:     { name: 'Gold Coach',       icon: '🥇', desc: 'Translate: complete every unit on Level 3.' },
+  star:     { name: 'Perfect Round',    icon: '⭐', desc: 'Get all 9 right on your first try.' },
+  streak5:  { name: 'On Fire',          icon: '🔥', desc: 'Pass 5 units in a row.' },
+  master:   { name: 'EALD Master',      icon: '💎', desc: 'Complete every unit on every level (Translate).' },
+  scrBronze:{ name: 'Scramble Apprentice', icon: '🧩', desc: 'Scramble: complete every unit on Level 1.' },
+  scrSilver:{ name: 'Scramble Pro',     icon: '🟪', desc: 'Scramble: complete every unit on Level 2.' },
+  scrGold:  { name: 'Scramble Master',  icon: '🟧', desc: 'Scramble: complete every unit on Level 3.' },
+  wizard:   { name: 'Word Wizard',      icon: '🪄', desc: 'Finish a Scramble round with zero wrong checks.' }
 };
+
+function modeKey(mode = state.mode) { return mode === 'scramble' ? '_SCR' : ''; }
+function unitDoneKey(unitId, lvl, mode = state.mode) { return `${unitId}_L${lvl}${modeKey(mode)}`; }
+function isUnitDone(unitId, lvl, mode = state.mode) { return !!state.completed[unitDoneKey(unitId, lvl, mode)]; }
 
 function awardBadge(id) {
   if (!state.badges.includes(id)) {
@@ -1067,6 +1150,7 @@ function awardBadge(id) {
   return false;
 }
 function checkLevelBadges() {
+  // Translate mode badges
   for (const lvl of [1, 2, 3]) {
     const all = UNITS.every(u => state.completed[`${u.id}_L${lvl}`]);
     if (all) {
@@ -1077,6 +1161,15 @@ function checkLevelBadges() {
   }
   const allLevels = UNITS.every(u => state.completed[`${u.id}_L1`] && state.completed[`${u.id}_L2`] && state.completed[`${u.id}_L3`]);
   if (allLevels) awardBadge('master');
+  // Scramble mode badges
+  for (const lvl of [1, 2, 3]) {
+    const all = UNITS.every(u => state.completed[`${u.id}_L${lvl}_SCR`]);
+    if (all) {
+      if (lvl === 1) awardBadge('scrBronze');
+      if (lvl === 2) awardBadge('scrSilver');
+      if (lvl === 3) awardBadge('scrGold');
+    }
+  }
   if (state.streak >= 5) awardBadge('streak5');
 }
 
@@ -1179,8 +1272,25 @@ function renderHome(app) {
   // Hero
   const hero = el('section', { class: 'hero' });
   const heroLeft = el('div', { class: 'panel' });
+
+  // Mode tabs
+  const modeTabs = el('div', { class: 'mode-tabs' },
+    el('button', {
+      class: 'mode-tab' + (state.mode === 'translate' ? ' active' : ''),
+      onclick: () => { state.mode = 'translate'; saveState(); render(); }
+    }, '📝 Translate'),
+    el('button', {
+      class: 'mode-tab' + (state.mode === 'scramble' ? ' active' : ''),
+      onclick: () => { state.mode = 'scramble'; saveState(); render(); }
+    }, '🧩 Scramble')
+  );
+  heroLeft.appendChild(modeTabs);
+
   heroLeft.appendChild(el('h1', {}, `Hey ${state.name}! Ready to coach your English?`));
-  heroLeft.appendChild(el('p', {}, 'Pick a level, then choose a topic. You will translate 9 Mandarin sentences (3 narrative, 3 persuasive, 3 informative). Get most of them close enough and you pass!'));
+  const blurb = state.mode === 'translate'
+    ? 'Pick a level, then choose a topic. You will translate 9 Mandarin sentences (3 narrative, 3 persuasive, 3 informative). Get most of them close enough and you pass!'
+    : 'Word-order workout! Tap the English word tiles to rebuild each sentence in the right order. 9 sentences per round — perfect for nailing the tricky bits like articles, plurals, and tense.';
+  heroLeft.appendChild(el('p', {}, blurb));
 
   const lvlRow = el('div', { class: 'level-row' });
   const lvls = [
@@ -1205,10 +1315,11 @@ function renderHome(app) {
   heroRight.appendChild(el('div', { class: 'section-title' }, 'Your Progress'));
   const stats = el('div', { class: 'stat-row' });
   const totalUnits = UNITS.length * 3;
-  const doneCount = Object.keys(state.completed).length;
+  const modeSuffix = state.mode === 'scramble' ? '_SCR' : '';
+  const doneCount = Object.keys(state.completed).filter(k => state.mode === 'scramble' ? k.endsWith('_SCR') : !k.endsWith('_SCR')).length;
   stats.appendChild(stat('XP', state.points));
   stats.appendChild(stat('Badges', state.badges.length));
-  stats.appendChild(stat('Units done', `${doneCount} / ${totalUnits}`));
+  stats.appendChild(stat(state.mode === 'scramble' ? 'Scramble done' : 'Translate done', `${doneCount} / ${totalUnits}`));
   stats.appendChild(stat('Streak', state.streak + ' 🔥'));
   heroRight.appendChild(stats);
 
@@ -1229,17 +1340,18 @@ function renderHome(app) {
   app.appendChild(hero);
 
   // Units
-  app.appendChild(el('div', { class: 'section-title' }, 'Topics — Level ' + state.selectedLevel));
+  const modeLabel = state.mode === 'scramble' ? '🧩 Scramble' : '📝 Translate';
+  app.appendChild(el('div', { class: 'section-title' }, `${modeLabel} — Topics — Level ${state.selectedLevel}`));
   const grid = el('section', { class: 'units' });
   for (const u of UNITS) {
-    const c1 = !!state.completed[`${u.id}_L1`];
-    const c2 = !!state.completed[`${u.id}_L2`];
-    const c3 = !!state.completed[`${u.id}_L3`];
-    const doneThisLevel = !!state.completed[`${u.id}_L${state.selectedLevel}`];
+    const c1 = isUnitDone(u.id, 1);
+    const c2 = isUnitDone(u.id, 2);
+    const c3 = isUnitDone(u.id, 3);
+    const doneThisLevel = isUnitDone(u.id, state.selectedLevel);
 
     const card = el('button', {
       class: 'unit' + (doneThisLevel ? ' done' : ''),
-      onclick: () => startQuiz(u.id)
+      onclick: () => state.mode === 'scramble' ? startScramble(u.id) : startQuiz(u.id)
     },
       el('div', { class: 'corner' }, doneThisLevel ? 'PASSED' : ''),
       el('div', { class: 'emoji' }, u.emoji),
@@ -1532,6 +1644,286 @@ function nextTopic() {
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+/* --------------------- SCRAMBLE MODE --------------------- */
+let scramble = null;
+
+function tokenizeEnglish(sentence) {
+  return sentence.trim().split(/\s+/);
+}
+function shuffleUntilDifferent(arr) {
+  if (arr.length < 2) return arr.slice();
+  let out;
+  for (let i = 0; i < 20; i++) {
+    out = shuffle(arr);
+    let same = true;
+    for (let j = 0; j < arr.length; j++) if (out[j] !== arr[j]) { same = false; break; }
+    if (!same) return out;
+  }
+  return out;
+}
+
+function startScramble(unitId) {
+  const u = UNITS.find(x => x.id === unitId);
+  const lvl = state.selectedLevel;
+  const data = u.levels[lvl];
+  const items = [];
+  ['narrative', 'persuasive', 'informative'].forEach(t => {
+    data[t].forEach(s => {
+      const expected = tokenizeEnglish(s.en);
+      const order = shuffleUntilDifferent(expected.map((_, i) => i));
+      items.push({
+        type: t, zh: s.zh, en: s.en,
+        expected,                             // ordered tokens
+        bankOrder: order,                     // initial shuffled indices into expected
+        slots: [],                            // array of indices into expected (placement order)
+        bankRemaining: order.slice(),         // indices still in the bank
+        status: 'pending',                    // 'pending' | 'correct'
+        wrongChecks: 0
+      });
+    });
+  });
+  scramble = {
+    unit: u, level: lvl, items, index: 0,
+    totalWrongChecks: 0, doneCount: 0
+  };
+  renderScramble();
+}
+
+function renderScramble() {
+  const app = $('#app');
+  app.innerHTML = '';
+  app.appendChild(topbar());
+
+  const it = scramble.items[scramble.index];
+
+  const head = el('div', { class: 'panel' });
+  head.appendChild(el('div', { class: 'quiz-header' },
+    el('button', {
+      class: 'btn ghost',
+      onclick: () => {
+        if (confirm('Leave this Scramble round? Progress on this round will be lost.')) { scramble = null; render(); }
+      }
+    }, '← Topics'),
+    el('div', { class: 'crumb' }, `Level ${scramble.level} • ${scramble.unit.name} • 🧩 Scramble`)
+  ));
+  head.appendChild(el('div', { class: 'quiz-title' },
+    el('div', { class: 'e' }, scramble.unit.emoji),
+    el('h2', {}, `${scramble.unit.name} — Build the sentence`)
+  ));
+  head.appendChild(el('div', { style: { color: 'var(--muted)', fontSize: '14px', marginTop: '6px' } },
+    'Tap the English word tiles in order to rebuild the sentence. Tap a placed tile to send it back to the bank.'));
+
+  // dots progress
+  const dots = el('div', { class: 'dots', style: { marginTop: '12px' } });
+  scramble.items.forEach((s, i) => {
+    const cls = 'd' + (i === scramble.index ? ' current' : (s.status === 'correct' ? ' done' : (s.wrongChecks > 0 ? ' wrong' : '')));
+    dots.appendChild(el('span', { class: cls }));
+  });
+  head.appendChild(dots);
+  app.appendChild(head);
+
+  // Stage
+  const stage = el('div', { class: 'panel scramble-stage' });
+  const tagCls = it.type === 'narrative' ? 'narr' : it.type === 'persuasive' ? 'pers' : 'info';
+  const tagText = it.type === 'narrative' ? 'Narrative 📖' : it.type === 'persuasive' ? 'Persuasive 💬' : 'Informative 📊';
+  stage.appendChild(el('div', { class: 'scramble-meta' },
+    el('span', { class: 'qnum' }, `Sentence ${scramble.index + 1} of ${scramble.items.length}`),
+    el('span', { class: 'tag ' + tagCls }, tagText)
+  ));
+  stage.appendChild(el('div', { class: 'zh' }, it.zh));
+
+  // Slots
+  const slotsEl = el('div', { class: 'slots' + (it.slots.length === 0 ? ' empty' : '') });
+  it.slots.forEach((idx, slotPos) => {
+    const tile = el('button', {
+      class: 'tile in-slot',
+      onclick: () => {
+        if (it.status === 'correct') return;
+        // remove from slot, return to bank
+        it.slots.splice(slotPos, 1);
+        it.bankRemaining.push(idx);
+        clearFeedback();
+        renderScramble();
+      }
+    }, it.expected[idx]);
+    slotsEl.appendChild(tile);
+  });
+  stage.appendChild(slotsEl);
+
+  // Bank
+  const bankEl = el('div', { class: 'bank' });
+  if (it.bankRemaining.length === 0 && it.status !== 'correct') {
+    bankEl.appendChild(el('div', { style: { color: 'var(--muted)', fontSize: '13px' } }, 'Bank is empty — hit Check ✓'));
+  }
+  it.bankOrder.forEach(idx => {
+    const stillInBank = it.bankRemaining.includes(idx);
+    if (!stillInBank) return;
+    const tile = el('button', {
+      class: 'tile',
+      onclick: () => {
+        if (it.status === 'correct') return;
+        it.slots.push(idx);
+        it.bankRemaining = it.bankRemaining.filter(x => x !== idx);
+        clearFeedback();
+        renderScramble();
+      }
+    }, it.expected[idx]);
+    bankEl.appendChild(tile);
+  });
+  stage.appendChild(bankEl);
+
+  // Feedback area
+  const fb = el('div', { class: 'scramble-feedback', id: 'scrFb' });
+  stage.appendChild(fb);
+
+  app.appendChild(stage);
+
+  // Actions
+  const actions = el('div', { class: 'scramble-actions' });
+  const info = el('div', { class: 'info', style: { color: 'var(--muted)', fontSize: '13px' } },
+    `${scramble.doneCount} / ${scramble.items.length} sentences built`);
+  actions.appendChild(info);
+
+  const btns = el('div', { class: 'row-wrap' });
+  btns.appendChild(el('button', {
+    class: 'btn',
+    onclick: () => {
+      it.bankRemaining = it.bankOrder.slice();
+      it.slots = [];
+      clearFeedback();
+      renderScramble();
+    }
+  }, 'Reset'));
+  btns.appendChild(el('button', { class: 'btn', onclick: skipScramble }, 'Skip ↷'));
+  btns.appendChild(el('button', { class: 'btn primary lg', onclick: checkScramble }, 'Check ✓'));
+  actions.appendChild(btns);
+  app.appendChild(actions);
+}
+
+function clearFeedback() {
+  const fb = document.getElementById('scrFb');
+  if (fb) { fb.classList.remove('show'); fb.innerHTML = ''; }
+  const slots = document.querySelector('.slots');
+  if (slots) { slots.classList.remove('correct', 'wrong'); }
+}
+
+function checkScramble() {
+  const it = scramble.items[scramble.index];
+  if (it.slots.length !== it.expected.length) {
+    toast('Place every word first', '✏️');
+    return;
+  }
+  const built = it.slots.map(i => it.expected[i]);
+  const ok = built.length === it.expected.length &&
+             built.every((w, i) => w.toLowerCase() === it.expected[i].toLowerCase());
+
+  const slotsEl = document.querySelector('.slots');
+  const fb = document.getElementById('scrFb');
+
+  if (ok) {
+    it.status = 'correct';
+    scramble.doneCount++;
+    if (slotsEl) slotsEl.classList.add('correct');
+    fb.innerHTML = '';
+    fb.appendChild(el('span', { class: 'ok' }, '✓ Nailed it!'));
+    fb.classList.add('show');
+    // Advance after a moment
+    setTimeout(() => {
+      const nextIdx = scramble.items.findIndex((s, i) => i > scramble.index && s.status !== 'correct');
+      const anyLeft = scramble.items.some(s => s.status !== 'correct');
+      if (!anyLeft) { finishScrambleUnit(); return; }
+      scramble.index = nextIdx >= 0 ? nextIdx
+        : scramble.items.findIndex(s => s.status !== 'correct');
+      renderScramble();
+    }, 700);
+  } else {
+    it.wrongChecks++;
+    scramble.totalWrongChecks++;
+    if (slotsEl) {
+      slotsEl.classList.add('wrong');
+      slotsEl.classList.add('shake');
+      setTimeout(() => slotsEl.classList.remove('shake'), 300);
+    }
+    fb.innerHTML = '';
+    fb.appendChild(el('span', { class: 'no' }, '✗ Not quite — check the word order and try again.'));
+    if (it.wrongChecks >= 2) {
+      fb.appendChild(el('div', { class: 'expect' }, 'Sample order: ', el('b', {}, it.expected.join(' '))));
+    }
+    fb.classList.add('show');
+  }
+}
+
+function skipScramble() {
+  const it = scramble.items[scramble.index];
+  if (it.status === 'correct') return;
+  if (!confirm('Skip this sentence? You can come back to it before the round ends.')) return;
+  // Mark wrong-checks so it's not perfect, but leave status pending for retry
+  it.wrongChecks = Math.max(it.wrongChecks, 1);
+  scramble.totalWrongChecks++;
+  // Move to next pending
+  const order = [];
+  for (let i = scramble.index + 1; i < scramble.items.length; i++) order.push(i);
+  for (let i = 0; i < scramble.index; i++) order.push(i);
+  const next = order.find(i => scramble.items[i].status !== 'correct');
+  if (next == null) { finishScrambleUnit(); return; }
+  scramble.index = next;
+  renderScramble();
+}
+
+function finishScrambleUnit() {
+  const u = scramble.unit;
+  const lvl = scramble.level;
+  const key = `${u.id}_L${lvl}_SCR`;
+  const firstTime = !state.completed[key];
+
+  const mult = lvl === 1 ? 1 : lvl === 2 ? 1.5 : 2;
+  let earned = Math.round(9 * 10 * mult);
+  const perfect = scramble.totalWrongChecks === 0;
+  if (perfect) earned += Math.round(100 * mult);
+  if (firstTime) earned += Math.round(50 * mult);
+
+  state.points += earned;
+  state.completed[key] = { firstTry: perfect, attempts: 1 + scramble.totalWrongChecks, score: earned, mode: 'scramble' };
+  state.streak = (state.lastSession === todayStr() || !state.lastSession) ? state.streak + 1 : 1;
+  state.lastSession = todayStr();
+  if (perfect) { awardBadge('star'); awardBadge('wizard'); }
+  saveState();
+  checkLevelBadges();
+
+  confetti();
+
+  const m = el('div');
+  m.appendChild(el('div', { style: { fontSize: '52px' } }, perfect ? '🪄' : '🎉'));
+  m.appendChild(el('h2', {}, perfect ? 'Word Wizard Round!' : 'Round Built!'));
+  m.appendChild(el('p', {}, perfect
+    ? `${state.name}, you built all 9 sentences with zero mistakes. Word-order master!`
+    : `Great work, ${state.name}! You finished ${u.name} on Level ${lvl}.`));
+  const row = el('div', { class: 'stat-row' });
+  row.appendChild(stat('XP earned', '+' + earned));
+  row.appendChild(stat('Wrong checks', scramble.totalWrongChecks));
+  row.appendChild(stat('Streak', state.streak + ' 🔥'));
+  m.appendChild(row);
+
+  const btns = el('div', { class: 'row-wrap', style: { justifyContent: 'center', marginTop: '16px' } });
+  const idx = UNITS.findIndex(x => x.id === u.id);
+  let nextUnit = null;
+  for (let i = 1; i <= UNITS.length; i++) {
+    const cand = UNITS[(idx + i) % UNITS.length];
+    if (!state.completed[`${cand.id}_L${lvl}_SCR`]) { nextUnit = cand; break; }
+  }
+  if (nextUnit) {
+    btns.appendChild(el('button', {
+      class: 'btn primary lg',
+      onclick: () => { closeModal(); startScramble(nextUnit.id); }
+    }, `Next: ${nextUnit.emoji} ${nextUnit.name} →`));
+  } else {
+    btns.appendChild(el('button', { class: 'btn primary lg', onclick: () => { closeModal(); scramble = null; render(); } }, 'Back to Topics'));
+  }
+  btns.appendChild(el('button', { class: 'btn ghost', onclick: () => { closeModal(); scramble = null; render(); } }, 'Home'));
+  m.appendChild(btns);
+  openModal(m);
 }
 
 /* --------------------- PROFILE / SETTINGS --------------------- */
